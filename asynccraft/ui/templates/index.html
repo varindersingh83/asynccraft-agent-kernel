@@ -2,6 +2,17 @@
 
 {% block content %}
 <div class="dashboard">
+    <!-- Pitch Strip -->
+    {% if active_skin and skin_registry[active_skin] %}
+    <div class="section pitch-strip">
+        <div class="pitch-header">
+            <span class="pitch-icon">{{ skin_registry[active_skin].icon }}</span>
+            <h2>{{ skin_registry[active_skin].name }} — {{ skin_registry[active_skin].tagline }}</h2>
+        </div>
+        <p class="pitch-content">{{ skin_registry[active_skin].pitch }}</p>
+    </div>
+    {% endif %}
+    
     <div class="section operator-section">
         <h2>Operator Control</h2>
         <div class="operator-selector-container">
@@ -19,64 +30,53 @@
     </div>
     
     <div class="section">
-        <h2>Workflow SOP — Conditional Flowchart</h2>
+        <h2>SME Workflow Demos — Conditional Flowcharts</h2>
         <div class="workflow-tabs">
-            <button class="workflow-tab active" onclick="showWorkflow('ops_dispatch')">Dispatch SOP</button>
-            <button class="workflow-tab" onclick="showWorkflow('deal_flow')">Deal Flow SOP</button>
+            <button class="workflow-tab {% if active_skin == 'ops_dispatch' %}active{% endif %}" onclick="showWorkflow('ops_dispatch')">🚛 Dispatch SOP</button>
+            <button class="workflow-tab {% if active_skin == 'crm_followup' %}active{% endif %}" onclick="showWorkflow('crm_followup')">📧 CRM Follow-up</button>
+            <button class="workflow-tab {% if active_skin == 'invoice_ap' %}active{% endif %}" onclick="showWorkflow('invoice_ap')">💰 Invoice / AP</button>
         </div>
         
         <!-- Dispatch SOP Flowchart -->
-        <div id="workflow-ops_dispatch" class="workflow-visualization">
+        <div id="workflow-ops_dispatch" class="workflow-visualization" style="{% if active_skin != 'ops_dispatch' %}display: none;{% endif %}">
+            <div class="demo-actions">
+                <form method="post" action="/demo-run" hx-post="/demo-run" hx-target="#approval-queue-container" hx-swap="innerHTML">
+                    <input type="hidden" name="skin" value="ops_dispatch">
+                    <button type="submit" class="btn-demo">Run Dispatch Demo</button>
+                </form>
+            </div>
             <div class="flowchart">
-                <!-- Row 1: Ingest -->
                 <div class="flowchart-row">
                     <div class="workflow-step" data-step="ingest">
                         <div class="step-icon">📥</div>
-                        <div class="step-label">Ingest Email</div>
-                        <div class="step-desc">New load request</div>
+                        <div class="step-label">Ingest Load Request</div>
+                        <div class="step-desc">Chicago → Dallas</div>
                     </div>
                 </div>
-                
-                <!-- Row 2: Create Load -->
-                <div class="flowchart-row">
-                    <div class="flow-arrow-down">↓</div>
-                </div>
-                
+                <div class="flowchart-row"><div class="flow-arrow-down">↓</div></div>
                 <div class="flowchart-row">
                     <div class="workflow-step" data-step="create-load">
                         <div class="step-icon">📦</div>
-                        <div class="step-label">Create Load</div>
-                        <div class="step-desc">System record</div>
+                        <div class="step-label">Create Load in TMS</div>
+                        <div class="step-desc">12 pallets, refrigerated</div>
                     </div>
                 </div>
-                
-                <!-- Row 3: Add Equipment + Driver -->
-                <div class="flowchart-row">
-                    <div class="flow-arrow-down">↓</div>
-                </div>
-                
+                <div class="flowchart-row"><div class="flow-arrow-down">↓</div></div>
                 <div class="flowchart-row">
                     <div class="workflow-step" data-step="add-equipment">
                         <div class="step-icon">🚛</div>
-                        <div class="step-label">Add Equipment + Driver</div>
-                        <div class="step-desc">Assignment</div>
+                        <div class="step-label">Assign Equipment + Driver</div>
+                        <div class="step-desc">Truck #T-789, Mike Torres</div>
                     </div>
                 </div>
-                
-                <!-- Row 4: Compliance Check (Diamond) -->
-                <div class="flowchart-row">
-                    <div class="flow-arrow-down">↓</div>
-                </div>
-                
+                <div class="flowchart-row"><div class="flow-arrow-down">↓</div></div>
                 <div class="flowchart-row">
                     <div class="workflow-decision" data-step="compliance-check">
                         <div class="decision-icon">⚖️</div>
-                        <div class="step-label">Compliance Check</div>
-                        <div class="step-desc">Gate</div>
+                        <div class="step-label">Compliance Check Gate</div>
+                        <div class="step-desc">Insurance | CDL | DOT hours</div>
                     </div>
                 </div>
-                
-                <!-- Row 5: Compliance branches -->
                 <div class="flowchart-row branch-row">
                     <div class="branch-container">
                         <div class="branch-left">
@@ -84,34 +84,27 @@
                             <div class="workflow-step branch-step" data-step="compliance-escalate">
                                 <div class="step-icon">🚨</div>
                                 <div class="step-label">Escalate / Hold</div>
-                                <div class="step-desc">Manual review</div>
+                                <div class="step-desc">Safety review</div>
                             </div>
                         </div>
                         <div class="branch-right">
                             <div class="flow-arrow-right">Pass ↘</div>
                             <div class="workflow-step branch-step" data-step="ask-drivers">
                                 <div class="step-icon">📲</div>
-                                <div class="step-label">Ask Drivers</div>
-                                <div class="step-desc">Confirmation</div>
+                                <div class="step-label">Request Confirmation</div>
+                                <div class="step-desc">Mobile app</div>
                             </div>
                         </div>
                     </div>
                 </div>
-                
-                <!-- Row 6: Driver Confirmation Decision -->
-                <div class="flowchart-row">
-                    <div class="flow-arrow-down">↓</div>
-                </div>
-                
+                <div class="flowchart-row"><div class="flow-arrow-down">↓</div></div>
                 <div class="flowchart-row">
                     <div class="workflow-decision" data-step="driver-confirm">
                         <div class="decision-icon">👤</div>
-                        <div class="step-label">Driver Confirmed?</div>
-                        <div class="step-desc">Branch</div>
+                        <div class="step-label">Driver Confirm Gate</div>
+                        <div class="step-desc">Accept load?</div>
                     </div>
                 </div>
-                
-                <!-- Row 7: Driver branches -->
                 <div class="flowchart-row branch-row">
                     <div class="branch-container">
                         <div class="branch-left">
@@ -127,252 +120,369 @@
                             <div class="workflow-step branch-step" data-step="traffic-weather">
                                 <div class="step-icon">🌤️</div>
                                 <div class="step-label">Traffic + Weather</div>
-                                <div class="step-desc">Conditions</div>
+                                <div class="step-desc">I-55 S conditions</div>
                             </div>
                         </div>
                     </div>
                 </div>
-                
-                <!-- Row 8: Weather Decision -->
-                <div class="flowchart-row">
-                    <div class="flow-arrow-down">↓</div>
-                </div>
-                
+                <div class="flowchart-row"><div class="flow-arrow-down">↓</div></div>
                 <div class="flowchart-row">
                     <div class="workflow-decision" data-step="weather-check">
                         <div class="decision-icon">⛈️</div>
-                        <div class="step-label">Severe Weather?</div>
-                        <div class="step-desc">Gate</div>
+                        <div class="step-label">Weather Risk Gate</div>
+                        <div class="step-desc">Heavy rain southern IL</div>
                     </div>
                 </div>
-                
-                <!-- Row 9: Weather branches -->
                 <div class="flowchart-row branch-row">
                     <div class="branch-container">
                         <div class="branch-left">
                             <div class="flow-arrow-left">↙ Severe</div>
-                            <div class="workflow-step branch-step approval-gate-step" data-step="reroute-approval">
+                            <div class="workflow-step branch-step" data-step="reroute-approval">
                                 <div class="step-icon">🚦</div>
                                 <div class="step-label">Reroute / Delay</div>
-                                <div class="step-desc">Approval needed</div>
+                                <div class="step-desc">I-57 S alternate</div>
                             </div>
                         </div>
                         <div class="branch-right">
                             <div class="flow-arrow-right">Clear ↘</div>
                             <div class="workflow-step branch-step" data-step="delivery-windows">
                                 <div class="step-icon">🕐</div>
-                                <div class="step-label">Delivery Windows</div>
-                                <div class="step-desc">Schedule</div>
+                                <div class="step-label">Delivery Window</div>
+                                <div class="step-desc">10:00-14:00 CST</div>
                             </div>
                         </div>
                     </div>
                 </div>
-                
-                <!-- Row 10: Coordinator -->
-                <div class="flowchart-row">
-                    <div class="flow-arrow-down">↓</div>
-                </div>
-                
+                <div class="flowchart-row"><div class="flow-arrow-down">↓</div></div>
                 <div class="flowchart-row">
                     <div class="workflow-step" data-step="coordinator">
                         <div class="step-icon">👥</div>
                         <div class="step-label">Assign Coordinator</div>
-                        <div class="step-desc">Contact person</div>
+                        <div class="step-desc">Sarah Kim</div>
                     </div>
                 </div>
-                
-                <!-- Row 11: Delivery -->
-                <div class="flowchart-row">
-                    <div class="flow-arrow-down">↓</div>
-                </div>
-                
+                <div class="flowchart-row"><div class="flow-arrow-down">↓</div></div>
                 <div class="flowchart-row">
                     <div class="workflow-step" data-step="delivery">
                         <div class="step-icon">📍</div>
-                        <div class="step-label">Delivery</div>
-                        <div class="step-desc">Execute</div>
+                        <div class="step-label">Delivery En Route</div>
+                        <div class="step-desc">ETA 12:30 CST</div>
                     </div>
                 </div>
-                
-                <!-- Row 12: POD → Billing -->
+                <div class="flowchart-row"><div class="flow-arrow-down">↓</div></div>
                 <div class="flowchart-row">
-                    <div class="flow-arrow-down">↓</div>
-                </div>
-                
-                <div class="flowchart-row">
-                    <div class="workflow-step" data-step="pod-billing">
-                        <div class="step-icon">💵</div>
+                    <div class="workflow-step final-step" data-step="pod-billing">
+                        <div class="step-icon">✅</div>
                         <div class="step-label">POD → Billing</div>
-                        <div class="step-desc">Invoice touchpoint</div>
+                        <div class="step-desc">INV: $3,280</div>
                     </div>
                 </div>
             </div>
         </div>
         
-        <!-- Deal Flow SOP Flowchart -->
-        <div id="workflow-deal_flow" class="workflow-visualization" style="display: none;">
+        <!-- CRM Follow-up Flowchart -->
+        <div id="workflow-crm_followup" class="workflow-visualization" style="{% if active_skin != 'crm_followup' %}display: none;{% endif %}">
+            <div class="demo-actions">
+                <form method="post" action="/demo-run" hx-post="/demo-run" hx-target="#approval-queue-container" hx-swap="innerHTML">
+                    <input type="hidden" name="skin" value="crm_followup">
+                    <button type="submit" class="btn-demo">Run CRM Follow-up Demo</button>
+                </form>
+            </div>
             <div class="flowchart">
-                <!-- Ingest Pitch -->
                 <div class="flowchart-row">
                     <div class="workflow-step" data-step="ingest">
-                        <div class="step-icon">📨</div>
-                        <div class="step-label">Ingest Pitch</div>
-                        <div class="step-desc">Startup submission</div>
+                        <div class="step-icon">📥</div>
+                        <div class="step-label">Ingest Lead</div>
+                        <div class="step-desc">TechFlow Logistics</div>
                     </div>
                 </div>
-                
+                <div class="flowchart-row"><div class="flow-arrow-down">↓</div></div>
                 <div class="flowchart-row">
-                    <div class="flow-arrow-down">↓</div>
-                </div>
-                
-                <!-- Score -->
-                <div class="flowchart-row">
-                    <div class="workflow-step" data-step="score">
-                        <div class="step-icon">⭐</div>
-                        <div class="step-label">Score</div>
-                        <div class="step-desc">Evaluate fit</div>
+                    <div class="workflow-step" data-step="enrich">
+                        <div class="step-icon">🔍</div>
+                        <div class="step-label">Enrich + Score</div>
+                        <div class="step-desc">120 employees, $15M revenue</div>
                     </div>
                 </div>
-                
+                <div class="flowchart-row"><div class="flow-arrow-down">↓</div></div>
                 <div class="flowchart-row">
-                    <div class="flow-arrow-down">↓</div>
-                </div>
-                
-                <!-- Compliance / KYC Gate (Diamond) -->
-                <div class="flowchart-row">
-                    <div class="workflow-decision" data-step="kyc-gate">
-                        <div class="decision-icon">🔐</div>
-                        <div class="step-label">KYC / Compliance</div>
-                        <div class="step-desc">Gate</div>
+                    <div class="workflow-decision" data-step="score-gate">
+                        <div class="decision-icon">⭐</div>
+                        <div class="step-label">Score Threshold Gate</div>
+                        <div class="step-desc">78/100 (threshold: 70)</div>
                     </div>
                 </div>
-                
-                <!-- KYC branches -->
                 <div class="flowchart-row branch-row">
                     <div class="branch-container">
                         <div class="branch-left">
-                            <div class="flow-arrow-left">↙ Fail</div>
-                            <div class="workflow-step branch-step" data-step="kyc-reject">
-                                <div class="step-icon">❌</div>
-                                <div class="step-label">Reject / Hold</div>
+                            <div class="flow-arrow-left">↙ Low</div>
+                            <div class="workflow-step branch-step" data-step="low-score-nurture">
+                                <div class="step-icon">🌱</div>
+                                <div class="step-label">Low Score → Nurture</div>
+                                <div class="step-desc">Campaign</div>
+                            </div>
+                        </div>
+                        <div class="branch-right">
+                            <div class="flow-arrow-right">High ↘</div>
+                            <div class="workflow-step branch-step" data-step="draft-email">
+                                <div class="step-icon">✍️</div>
+                                <div class="step-label">Draft Follow-up Email</div>
+                                <div class="step-desc">Personalized</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flowchart-row"><div class="flow-arrow-down">↓</div></div>
+                <div class="flowchart-row">
+                    <div class="workflow-decision" data-step="email-approve">
+                        <div class="decision-icon">📧</div>
+                        <div class="step-label">Email Send Approval Gate</div>
+                        <div class="step-desc">Review draft + subject</div>
+                    </div>
+                </div>
+                <div class="flowchart-row branch-row">
+                    <div class="branch-container">
+                        <div class="branch-left">
+                            <div class="flow-arrow-left">↙ Reject</div>
+                            <div class="workflow-step branch-step" data-step="email-hold">
+                                <div class="step-icon">✋</div>
+                                <div class="step-label">Hold / Edit</div>
                                 <div class="step-desc">Manual review</div>
                             </div>
                         </div>
                         <div class="branch-right">
-                            <div class="flow-arrow-right">Pass ↘</div>
-                            <div class="workflow-step branch-step approval-gate-step" data-step="partner-notify">
-                                <div class="step-icon">📧</div>
-                                <div class="step-label">Notify Partner</div>
-                                <div class="step-desc">Approval needed</div>
+                            <div class="flow-arrow-right">Approve ↘</div>
+                            <div class="workflow-step branch-step" data-step="needs-manager-review">
+                                <div class="step-icon">👔</div>
+                                <div class="step-label">Manager Review?</div>
+                                <div class="step-desc">Deal size check</div>
                             </div>
                         </div>
                     </div>
                 </div>
-                
+                <div class="flowchart-row"><div class="flow-arrow-down">↓</div></div>
                 <div class="flowchart-row">
-                    <div class="flow-arrow-down">↓</div>
+                    <div class="workflow-decision" data-step="needs-manager-review">
+                        <div class="decision-icon">💼</div>
+                        <div class="step-label">Manager Review Gate</div>
+                        <div class="step-desc">$45K (threshold: $50K)</div>
+                    </div>
                 </div>
-                
-                <!-- CRM Writeback -->
+                <div class="flowchart-row branch-row">
+                    <div class="branch-container">
+                        <div class="branch-left">
+                            <div class="flow-arrow-left">↙ High Value</div>
+                            <div class="workflow-step branch-step" data-step="manager-escalate">
+                                <div class="step-icon">⬆️</div>
+                                <div class="step-label">Escalate to Manager</div>
+                                <div class="step-desc">Review needed</div>
+                            </div>
+                        </div>
+                        <div class="branch-right">
+                            <div class="flow-arrow-right">Normal ↘</div>
+                            <div class="workflow-step branch-step" data-step="send-email">
+                                <div class="step-icon">📤</div>
+                                <div class="step-label">Send Email</div>
+                                <div class="step-desc">Delivered</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flowchart-row"><div class="flow-arrow-down">↓</div></div>
                 <div class="flowchart-row">
-                    <div class="workflow-step" data-step="crm-writeback">
+                    <div class="workflow-step" data-step="crm-update">
                         <div class="step-icon">💾</div>
                         <div class="step-label">CRM Writeback</div>
-                        <div class="step-desc">Create deal record</div>
+                        <div class="step-desc">Stage: Contacted</div>
                     </div>
                 </div>
-                
+                <div class="flowchart-row"><div class="flow-arrow-down">↓</div></div>
                 <div class="flowchart-row">
-                    <div class="flow-arrow-down">↓</div>
-                </div>
-                
-                <!-- Audit -->
-                <div class="flowchart-row">
-                    <div class="workflow-step" data-step="audit">
-                        <div class="step-icon">📊</div>
-                        <div class="step-label">Audit</div>
-                        <div class="step-desc">Log decision</div>
+                    <div class="workflow-step final-step" data-step="audit">
+                        <div class="step-icon">✅</div>
+                        <div class="step-label">Audit + Log</div>
+                        <div class="step-desc">Compliance trail</div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="section">
-        <h2>Demo Controls</h2>
-        <div class="demo-controls">
-            <form hx-post="/demo-run" hx-target="#approval-queue" hx-swap="innerHTML">
-                <input type="hidden" name="skin" value="ops_dispatch">
-                <button type="submit" class="btn-primary">Run Dispatch Demo</button>
-            </form>
-            
-            <form hx-post="/demo-run" hx-target="#approval-queue" hx-swap="innerHTML">
-                <input type="hidden" name="skin" value="deal_flow">
-                <button type="submit" class="btn-primary">Run Deal Flow Demo</button>
-            </form>
-        </div>
-    </div>
-    
-    <!-- Production Panels -->
-    <div class="production-panels">
-        <!-- Approvals Panel -->
-        <div class="section panel-approvals">
-            <h2>🚦 Dynamic Approvals</h2>
-            <div id="approval-queue">
-                {% include "approval_queue.html" %}
             </div>
         </div>
         
-        <!-- Logs / Audit Panel -->
-        <div class="section panel-logs">
-            <h2>📋 Audit Log</h2>
-            <div class="audit-timeline">
-                {% if recent_decisions %}
-                    {% for decision in recent_decisions %}
-                    <div class="audit-entry {% if decision.status.value == 'approved' %}approved{% else %}rejected{% endif %}">
-                        <div class="audit-marker"></div>
-                        <div class="audit-content">
-                            <div class="audit-header">
-                                <span class="tool-badge-sm">{{ decision.tool_name }}</span>
-                                <span class="decision-status {{ decision.status.value }}">{{ decision.status.value|upper }}</span>
+        <!-- Invoice/AP Flowchart -->
+        <div id="workflow-invoice_ap" class="workflow-visualization" style="{% if active_skin != 'invoice_ap' %}display: none;{% endif %}">
+            <div class="demo-actions">
+                <form method="post" action="/demo-run" hx-post="/demo-run" hx-target="#approval-queue-container" hx-swap="innerHTML">
+                    <input type="hidden" name="skin" value="invoice_ap">
+                    <button type="submit" class="btn-demo">Run Invoice/AP Demo</button>
+                </form>
+            </div>
+            <div class="flowchart">
+                <div class="flowchart-row">
+                    <div class="workflow-step" data-step="ingest">
+                        <div class="step-icon">📥</div>
+                        <div class="step-label">Ingest Invoice</div>
+                        <div class="step-desc">INV-2026-0891</div>
+                    </div>
+                </div>
+                <div class="flowchart-row"><div class="flow-arrow-down">↓</div></div>
+                <div class="flowchart-row">
+                    <div class="workflow-step" data-step="three-way-match">
+                        <div class="step-icon">🔍</div>
+                        <div class="step-label">3-Way Match</div>
+                        <div class="step-desc">PO | Invoice | Receipt</div>
+                    </div>
+                </div>
+                <div class="flowchart-row"><div class="flow-arrow-down">↓</div></div>
+                <div class="flowchart-row">
+                    <div class="workflow-decision" data-step="match-result">
+                        <div class="decision-icon">⚖️</div>
+                        <div class="step-label">Match Result Gate</div>
+                        <div class="step-desc">Qty: 105 vs 100</div>
+                    </div>
+                </div>
+                <div class="flowchart-row branch-row">
+                    <div class="branch-container">
+                        <div class="branch-left">
+                            <div class="flow-arrow-left">↙ Pass</div>
+                            <div class="workflow-step branch-step" data-step="auto-post">
+                                <div class="step-icon">⚡</div>
+                                <div class="step-label">Auto-post</div>
+                                <div class="step-desc">Clean match</div>
                             </div>
-                            <div class="audit-preview">{{ decision.preview }}</div>
-                            <div class="audit-meta">
-                                <span class="decision-approver">{{ decision.approver_name or 'System' }}</span>
-                                <span class="decision-time">{{ decision.decided_at.strftime('%Y-%m-%d %H:%M:%S') if decision.decided_at else 'Pending' }}</span>
+                        </div>
+                        <div class="branch-right">
+                            <div class="flow-arrow-right">Fail ↘</div>
+                            <div class="workflow-step branch-step" data-step="propose-correction">
+                                <div class="step-icon">📝</div>
+                                <div class="step-label">Propose Correction</div>
+                                <div class="step-desc">+5 units, +$122.50</div>
                             </div>
                         </div>
                     </div>
-                    {% endfor %}
+                </div>
+                <div class="flowchart-row"><div class="flow-arrow-down">↓</div></div>
+                <div class="flowchart-row">
+                    <div class="workflow-decision" data-step="correction-approve">
+                        <div class="decision-icon">✅</div>
+                        <div class="step-label">Correction Approval Gate</div>
+                        <div class="step-desc">Accept overage?</div>
+                    </div>
+                </div>
+                <div class="flowchart-row branch-row">
+                    <div class="branch-container">
+                        <div class="branch-left">
+                            <div class="flow-arrow-left">↙ Reject</div>
+                            <div class="workflow-step branch-step" data-step="exception-hold">
+                                <div class="step-icon">🛑</div>
+                                <div class="step-label">Exception Hold</div>
+                                <div class="step-desc">AP manager</div>
+                            </div>
+                        </div>
+                        <div class="branch-right">
+                            <div class="flow-arrow-right">Approve ↘</div>
+                            <div class="workflow-step branch-step" data-step="vendor-check">
+                                <div class="step-icon">🏢</div>
+                                <div class="step-label">Vendor Compliance?</div>
+                                <div class="step-desc">Terms | Credit</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flowchart-row"><div class="flow-arrow-down">↓</div></div>
+                <div class="flowchart-row">
+                    <div class="workflow-decision" data-step="vendor-check">
+                        <div class="decision-icon">🔐</div>
+                        <div class="step-label">Vendor Compliance Gate</div>
+                        <div class="step-desc">Acme Parts Supply</div>
+                    </div>
+                </div>
+                <div class="flowchart-row branch-row">
+                    <div class="branch-container">
+                        <div class="branch-left">
+                            <div class="flow-arrow-left">↙ Fail</div>
+                            <div class="workflow-step branch-step" data-step="vendor-hold">
+                                <div class="step-icon">⛔</div>
+                                <div class="step-label">Vendor Hold</div>
+                                <div class="step-desc">Resolve issue</div>
+                            </div>
+                        </div>
+                        <div class="branch-right">
+                            <div class="flow-arrow-right">Pass ↘</div>
+                            <div class="workflow-step branch-step" data-step="post-to-ap">
+                                <div class="step-icon">💳</div>
+                                <div class="step-label">Post to AP</div>
+                                <div class="step-desc">$2,572.50</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flowchart-row"><div class="flow-arrow-down">↓</div></div>
+                <div class="flowchart-row">
+                    <div class="workflow-step" data-step="gl-writeback">
+                        <div class="step-icon">📊</div>
+                        <div class="step-label">GL Writeback</div>
+                        <div class="step-desc">Dr/Cr entries</div>
+                    </div>
+                </div>
+                <div class="flowchart-row"><div class="flow-arrow-down">↓</div></div>
+                <div class="flowchart-row">
+                    <div class="workflow-step final-step" data-step="audit">
+                        <div class="step-icon">✅</div>
+                        <div class="step-label">Audit + Compliance Log</div>
+                        <div class="step-desc">Trail complete</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Approval Queue -->
+    <div class="section" id="approval-queue-container">
+        <h2>HITL Approval Queue</h2>
+        {% if pending_approvals %}
+            {% include 'approval_queue.html' %}
+        {% else %}
+        <p class="empty-state">No pending approvals. Run a demo above to generate gates.</p>
+        {% endif %}
+    </div>
+    
+    <!-- Production Panels Row -->
+    <div class="panels-row">
+        <!-- Log Panel -->
+        <div class="section panel-logs">
+            <h2>📋 Operations Log</h2>
+            <div class="log-container">
+                {% if recent_decisions %}
+                    <div class="log-entry">
+                        <span class="log-timestamp">11:42:03</span>
+                        <span class="log-level log-level-info">INFO</span>
+                        <span class="log-message">Demo run initiated: {{ active_skin }}</span>
+                    </div>
+                    <div class="log-entry">
+                        <span class="log-timestamp">11:42:05</span>
+                        <span class="log-level log-level-success">SUCCESS</span>
+                        <span class="log-message">First gate reached, awaiting approval</span>
+                    </div>
                 {% else %}
-                    <p class="empty-state">No audit entries yet. Run a demo to see the trail.</p>
+                    <p class="empty-state">No log entries yet. Run a demo to see operations logs.</p>
                 {% endif %}
             </div>
         </div>
         
         <!-- Billing Panel -->
         <div class="section panel-billing">
-            <h2>💵 Billing Events</h2>
-            <div class="billing-timeline">
+            <h2>💰 Billing Events</h2>
+            <div class="billing-container">
                 {% if recent_decisions %}
                     <div class="billing-entry">
                         <div class="billing-icon">📄</div>
                         <div class="billing-content">
-                            <div class="billing-label">POD Received</div>
-                            <div class="billing-desc">Proof of delivery captured</div>
-                            <div class="billing-amount">Billable event: <strong>$2,450.00</strong></div>
-                        </div>
-                    </div>
-                    <div class="billing-entry">
-                        <div class="billing-icon">💳</div>
-                        <div class="billing-content">
-                            <div class="billing-label">Invoice Generated</div>
-                            <div class="billing-desc">INV-2026-0042</div>
-                            <div class="billing-amount">Status: <strong class="billing-status-pending">Pending</strong></div>
+                            <div class="billing-label">Billable Event</div>
+                            <div class="billing-desc">Demo run completed</div>
+                            <div class="billing-amount">Amount: <strong>$0.00</strong></div>
                         </div>
                     </div>
                 {% else %}
-                    <p class="empty-state">No billing events yet. Complete a demo run to generate invoices.</p>
+                    <p class="empty-state">No billing events yet. Complete a demo run.</p>
                 {% endif %}
             </div>
         </div>
@@ -385,24 +495,8 @@
                     <div class="compliance-gate passed">
                         <div class="gate-icon">✓</div>
                         <div class="gate-content">
-                            <div class="gate-label">Insurance Verification</div>
-                            <div class="gate-status">PASSED</div>
-                            <div class="gate-time">2 mins ago</div>
-                        </div>
-                    </div>
-                    <div class="compliance-gate passed">
-                        <div class="gate-icon">✓</div>
-                        <div class="gate-content">
-                            <div class="gate-label">Driver License Valid</div>
-                            <div class="gate-status">PASSED</div>
-                            <div class="gate-time">2 mins ago</div>
-                        </div>
-                    </div>
-                    <div class="compliance-gate warning">
-                        <div class="gate-icon">⚠</div>
-                        <div class="gate-content">
-                            <div class="gate-label">Weight Limit Check</div>
-                            <div class="gate-status">NEEDS APPROVAL</div>
+                            <div class="gate-label">Gate Passed</div>
+                            <div class="gate-status">APPROVED</div>
                             <div class="gate-time">Just now</div>
                         </div>
                     </div>
@@ -443,16 +537,32 @@
 </div>
 
 <script>
+    // Initialize active skin on page load
+    const activeSkin = '{{ active_skin }}';
+    
     function showWorkflow(skin) {
         document.querySelectorAll('.workflow-visualization').forEach(function(el) {
             el.style.display = 'none';
         });
-        document.getElementById('workflow-' + skin).style.display = 'block';
+        const targetWorkflow = document.getElementById('workflow-' + skin);
+        if (targetWorkflow) {
+            targetWorkflow.style.display = 'block';
+        }
         
         document.querySelectorAll('.workflow-tab').forEach(function(tab) {
             tab.classList.remove('active');
         });
         event.target.classList.add('active');
     }
+    
+    // Auto-select active skin tab on load
+    window.addEventListener('DOMContentLoaded', function() {
+        if (activeSkin) {
+            const activeWorkflow = document.getElementById('workflow-' + activeSkin);
+            if (activeWorkflow) {
+                activeWorkflow.style.display = 'block';
+            }
+        }
+    });
 </script>
 {% endblock %}
