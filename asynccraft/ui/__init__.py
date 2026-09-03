@@ -15,35 +15,115 @@ from asynccraft.kernel.config import get_settings
 from asynccraft.kernel.tools import get_tool_registry, Tool, ToolResult
 from asynccraft.skins.ops_dispatch.agent import get_sample_exceptions
 from asynccraft.skins.deal_flow.agent import get_sample_pitches
+from asynccraft.skins.crm_followup.agent import get_sample_leads
+from asynccraft.skins.invoice_ap.agent import get_sample_invoices
 from asynccraft.skins.ops_dispatch.sop_runner import (
     SOPRunner as DispatchSOPRunner,
     DISPATCH_SOP,
-    GateDecision,
+    GateDecision as DispatchGateDecision,
 )
 from asynccraft.skins.deal_flow.sop_runner import (
     SOPRunner as DealFlowSOPRunner,
     DEAL_FLOW_SOP,
     GateDecision as DealFlowGateDecision,
 )
+from asynccraft.skins.crm_followup.sop_runner import (
+    SOPRunner as CRMFollowupSOPRunner,
+    CRM_FOLLOWUP_SOP,
+    GateDecision as CRMGateDecision,
+)
+from asynccraft.skins.invoice_ap.sop_runner import (
+    SOPRunner as InvoiceAPSOPRunner,
+    INVOICE_AP_SOP,
+    GateDecision as InvoiceAPGateDecision,
+)
 
 router = APIRouter()
 
-env = Environment(loader=FileSystemLoader("asynccraft/ui/templates"), cache_size=0)
+env = Environment(loader=FileSystemLoader("asyncraft/ui/templates"), cache_size=0)
 env.filters["tojson"] = lambda x: json.dumps(x, indent=2)
 
 templates = Jinja2Templates(env=env)
 
 MOCK_OPERATORS = [
     {"id": "john_chen", "name": "John Chen", "role": "Dispatcher"},
-    {"id": "jane_park", "name": "Jane Park", "role": "Ops Manager"},
-    {"id": "alex_rivera", "name": "Alex Rivera", "role": "Partner"},
-    {"id": "sam_okonkwo", "name": "Sam Okonkwo", "role": "Analyst"},
+    {"id": "jane_park", "name": "Jane Park", "role": "Sales Manager"},
+    {"id": "alex_rivera", "name": "Alex Rivera", "role": "Ops Manager"},
+    {"id": "sam_okonkwo", "name": "Sam Okonkwo", "role": "Finance Controller"},
 ]
+
+# Skin Registry: centralizes skin metadata for tabs, deep links, and demos
+SKIN_REGISTRY = {
+    "ops_dispatch": {
+        "id": "ops_dispatch",
+        "name": "Dispatch SOP",
+        "tagline": "Freight & Field Ops Automation",
+        "pitch": "Automate freight dispatch from inbound load request to POD + billing. Dynamic gates for compliance (DOT/insurance), driver confirmation, and weather routing keep ops managers in control while the agent handles the workflow choreography. Perfect for trucking, 3PL, and field service companies managing 50+ loads per day.",
+        "icon": "🚛",
+        "get_samples": get_sample_exceptions,
+        "sop_runner_class": DispatchSOPRunner,
+        "sop_definition": DISPATCH_SOP,
+        "gate_decision_class": DispatchGateDecision,
+        "deep_link": "/demo/dispatch",
+        "click_path": [
+            "Inbound email triggers load creation in TMS",
+            "Agent assigns equipment, driver, checks compliance (insurance, CDL, DOT hours)",
+            "Human approves compliance gate → driver confirmation gate → weather risk gate",
+            "Conditional branches: reject paths escalate/hold, approve paths advance to delivery",
+            "Final step: POD received, invoice generated, compliance audit logged",
+        ],
+    },
+    "crm_followup": {
+        "id": "crm_followup",
+        "name": "CRM Follow-up",
+        "tagline": "SME Sales Lead Automation",
+        "pitch": "Automate inbound lead follow-up for mid-market B2B sales teams. Agent enriches lead data, scores fit, drafts personalized follow-up emails, and routes to CRM — all with human approval gates before sending. Sales reps approve/reject email drafts; manager review triggers for high-value deals. Built for logistics software, supply chain SaaS, and B2B service companies.",
+        "icon": "📧",
+        "get_samples": get_sample_leads,
+        "sop_runner_class": CRMFollowupSOPRunner,
+        "sop_definition": CRM_FOLLOWUP_SOP,
+        "gate_decision_class": CRMGateDecision,
+        "deep_link": "/demo/crm",
+        "click_path": [
+            "Inbound lead (form submission) ingested with company details",
+            "Agent enriches data (firmographics, tech stack), scores lead fit",
+            "Score threshold gate: high-scoring leads → draft email, low → nurture campaign",
+            "Human approves email draft before send (gate shows preview + subject line)",
+            "Conditional manager review for high-value deals (>$50K estimate)",
+            "Email sent → CRM updated with stage + owner → audit trail logged",
+        ],
+    },
+    "invoice_ap": {
+        "id": "invoice_ap",
+        "name": "Invoice / AP Exception",
+        "tagline": "Finance Exception Handling",
+        "pitch": "Automate invoice 3-way match exceptions for AP teams. When PO/invoice/receipt don't match (qty variance, price discrepancy), the agent proposes corrections and routes to finance for approval. Human gates for correction approval and vendor compliance checks prevent errors while keeping AP flowing. Ideal for manufacturers, distributors, and ops-heavy SMEs processing 100+ invoices per month.",
+        "icon": "💰",
+        "get_samples": get_sample_invoices,
+        "sop_runner_class": InvoiceAPSOPRunner,
+        "sop_definition": INVOICE_AP_SOP,
+        "gate_decision_class": InvoiceAPGateDecision,
+        "deep_link": "/demo/invoice",
+        "click_path": [
+            "Invoice arrives → 3-way match runs (PO vs Invoice vs Receipt)",
+            "Mismatch detected (e.g., qty overage: invoice 105 units vs PO 100 units)",
+            "Agent proposes correction with $ delta ($122.50 overage within tolerance)",
+            "Human approves correction gate (shows original/corrected amounts + reason)",
+            "Vendor compliance gate checks payment terms, disputes, credit limit",
+            "Invoice posted to AP → GL writeback → audit + compliance log complete",
+        ],
+    },
+}
+
+
+def get_skin_config(skin_id: str) -> dict:
+    """Get skin configuration from registry."""
+    return SKIN_REGISTRY.get(skin_id, SKIN_REGISTRY["ops_dispatch"])
 
 
 @router.get("/", response_class=HTMLResponse)
-async def index(request: Request, session: AsyncSession = Depends(get_db)):
-    """Home page with approval queue."""
+async def index(request: Request, session: AsyncSession = Depends(get_db), skin: str | None = None):
+    """Home page with approval queue and skin selector."""
     approval_service = ApprovalService(session)
     pending = await approval_service.get_pending_approvals()
     
@@ -51,7 +131,8 @@ async def index(request: Request, session: AsyncSession = Depends(get_db)):
     result = await session.execute(query)
     recent_runs = list(result.scalars().all())
     
-    settings = get_settings()
+    # Support deep link via query param
+    active_skin = skin if skin in SKIN_REGISTRY else "ops_dispatch"
     
     recent_q = (
         select(Approval)
@@ -67,11 +148,31 @@ async def index(request: Request, session: AsyncSession = Depends(get_db)):
         context={
             "pending_approvals": list(pending),
             "recent_runs": list(recent_runs),
-            "active_skin": str(settings.active_skin),
+            "active_skin": active_skin,
+            "skin_registry": SKIN_REGISTRY,
             "mock_operators": MOCK_OPERATORS,
             "recent_decisions": recent_decisions,
         },
     )
+
+
+# Deep link routes
+@router.get("/demo/dispatch", response_class=HTMLResponse)
+async def demo_dispatch(request: Request, session: AsyncSession = Depends(get_db)):
+    """Deep link to Dispatch demo."""
+    return await index(request, session, skin="ops_dispatch")
+
+
+@router.get("/demo/crm", response_class=HTMLResponse)
+async def demo_crm(request: Request, session: AsyncSession = Depends(get_db)):
+    """Deep link to CRM Follow-up demo."""
+    return await index(request, session, skin="crm_followup")
+
+
+@router.get("/demo/invoice", response_class=HTMLResponse)
+async def demo_invoice(request: Request, session: AsyncSession = Depends(get_db)):
+    """Deep link to Invoice/AP demo."""
+    return await index(request, session, skin="invoice_ap")
 
 
 @router.post("/demo-run", response_class=HTMLResponse)
@@ -81,21 +182,17 @@ async def create_demo_run(
     session: AsyncSession = Depends(get_db),
 ):
     """Create a demo run with SOP-based workflow."""
-    if skin == "ops_dispatch":
-        samples = get_sample_exceptions()
-        input_data = samples[0]
-    else:
-        samples = get_sample_pitches()
-        input_data = samples[0]
+    skin_config = get_skin_config(skin)
+    
+    # Get sample data for the skin
+    samples = skin_config["get_samples"]()
+    input_data = samples[0]
     
     orchestrator = AgentOrchestrator(session)
     run = await orchestrator.create_run(skin, input_data)
     
     # Initialize SOP runner
-    if skin == "ops_dispatch":
-        sop_runner = DispatchSOPRunner(DISPATCH_SOP, session)
-    else:
-        sop_runner = DealFlowSOPRunner(DEAL_FLOW_SOP, session)
+    sop_runner = skin_config["sop_runner_class"](skin_config["sop_definition"], session)
     
     # Start SOP and auto-advance to first gate
     sop_runner.start()
@@ -192,20 +289,18 @@ async def approve(
         )
         run = run_result.scalar_one()
         
-        # Initialize SOP runner with current state
-        if run.skin == "ops_dispatch":
-            sop_runner = DispatchSOPRunner(DISPATCH_SOP, session)
-        else:
-            sop_runner = DealFlowSOPRunner(DEAL_FLOW_SOP, session)
+        skin_config = get_skin_config(run.skin)
+        sop_runner = skin_config["sop_runner_class"](skin_config["sop_definition"], session)
         
         # Restore state
         sop_runner.current_step_id = sop_state.current_step_id
         sop_runner.completed_steps = sop_state.completed_steps.copy()
         
         # Handle gate decision (approve)
+        GateDecision = skin_config["gate_decision_class"]
         next_gate, new_events = await sop_runner.handle_gate_decision(
             sop_state.current_step_id,
-            GateDecision.APPROVE if run.skin == "ops_dispatch" else DealFlowGateDecision.APPROVE
+            GateDecision.APPROVE
         )
         
         # Update SOP state
@@ -280,20 +375,18 @@ async def reject(
         )
         run = run_result.scalar_one()
         
-        # Initialize SOP runner with current state
-        if run.skin == "ops_dispatch":
-            sop_runner = DispatchSOPRunner(DISPATCH_SOP, session)
-        else:
-            sop_runner = DealFlowSOPRunner(DEAL_FLOW_SOP, session)
+        skin_config = get_skin_config(run.skin)
+        sop_runner = skin_config["sop_runner_class"](skin_config["sop_definition"], session)
         
         # Restore state
         sop_runner.current_step_id = sop_state.current_step_id
         sop_runner.completed_steps = sop_state.completed_steps.copy()
         
         # Handle gate decision (reject)
+        GateDecision = skin_config["gate_decision_class"]
         next_gate, new_events = await sop_runner.handle_gate_decision(
             sop_state.current_step_id,
-            GateDecision.REJECT if run.skin == "ops_dispatch" else DealFlowGateDecision.REJECT
+            GateDecision.REJECT
         )
         
         # Update SOP state

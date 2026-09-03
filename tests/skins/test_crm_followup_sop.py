@@ -1,7 +1,7 @@
 """Tests for CRM Follow-up SOP runner."""
 
 import pytest
-from asyncraft.skins.crm_followup.sop_runner import (
+from asynccraft.skins.crm_followup.sop_runner import (
     SOPRunner,
     CRM_FOLLOWUP_SOP,
     GateDecision,

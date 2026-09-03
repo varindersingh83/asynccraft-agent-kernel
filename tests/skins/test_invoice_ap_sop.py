@@ -1,7 +1,7 @@
 """Tests for Invoice/AP SOP runner."""
 
 import pytest
-from asyncraft.skins.invoice_ap.sop_runner import (
+from asynccraft.skins.invoice_ap.sop_runner import (
     SOPRunner,
     INVOICE_AP_SOP,
     GateDecision,
