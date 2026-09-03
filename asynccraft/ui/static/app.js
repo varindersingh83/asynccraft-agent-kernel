@@ -3,7 +3,7 @@
 (function() {
     'use strict';
     
-    const STORAGE_KEY = 'asyncraft_selected_operator';
+    const STORAGE_KEY = 'asynccraft_selected_operator';
     
     // Initialize operator selection from localStorage
     function initOperatorSelector() {

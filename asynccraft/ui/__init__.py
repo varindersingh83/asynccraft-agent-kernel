@@ -8,8 +8,8 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from asynccraft.kernel.database import get_db
-from asynccraft.kernel.models import AgentRun, Approval
-from asyncraft.kernel.approval import ApprovalService
+from asynccraft.kernel.models import AgentRun, Approval, ApprovalStatus
+from asynccraft.kernel.approval import ApprovalService
 from asynccraft.kernel.agents import AgentOrchestrator
 from asynccraft.kernel.config import get_settings
 from asynccraft.skins.ops_dispatch.agent import get_sample_exceptions
@@ -17,7 +17,7 @@ from asynccraft.skins.deal_flow.agent import get_sample_pitches
 
 router = APIRouter()
 
-env = Environment(loader=FileSystemLoader("asyncraft/ui/templates"), cache_size=0)
+env = Environment(loader=FileSystemLoader("asynccraft/ui/templates"), cache_size=0)
 env.filters["tojson"] = lambda x: json.dumps(x, indent=2)
 
 templates = Jinja2Templates(env=env)
@@ -42,6 +42,14 @@ async def index(request: Request, session: AsyncSession = Depends(get_db)):
     
     settings = get_settings()
     
+    recent_q = (
+        select(Approval)
+        .where(Approval.status.in_([ApprovalStatus.APPROVED, ApprovalStatus.REJECTED]))
+        .order_by(Approval.decided_at.desc())
+        .limit(5)
+    )
+    recent_decisions = list((await session.execute(recent_q)).scalars().all())
+
     return templates.TemplateResponse(
         request=request,
         name="index.html",
@@ -50,6 +58,7 @@ async def index(request: Request, session: AsyncSession = Depends(get_db)):
             "recent_runs": list(recent_runs),
             "active_skin": str(settings.active_skin),
             "mock_operators": MOCK_OPERATORS,
+            "recent_decisions": recent_decisions,
         },
     )
 
@@ -72,7 +81,7 @@ async def create_demo_run(
     run = await orchestrator.create_run(skin, input_data)
     
     if skin == "ops_dispatch":
-        from asyncraft.skins.ops_dispatch.agent import OpsDispatchAgent
+        from asynccraft.skins.ops_dispatch.agent import OpsDispatchAgent
         agent = OpsDispatchAgent()
     else:
         from asynccraft.skins.deal_flow.agent import DealFlowAgent
@@ -128,7 +137,7 @@ async def approve(
     
     pending = await approval_service.get_pending_approvals()
     
-    query = select(Approval).where(Approval.status.in_(["approved", "rejected"])).order_by(Approval.decided_at.desc()).limit(5)
+    query = select(Approval).where(Approval.status.in_([ApprovalStatus.APPROVED, ApprovalStatus.REJECTED])).order_by(Approval.decided_at.desc()).limit(5)
     result = await session.execute(query)
     recent_decisions = list(result.scalars().all())
     
@@ -156,7 +165,7 @@ async def reject(
     
     pending = await approval_service.get_pending_approvals()
     
-    query = select(Approval).where(Approval.status.in_(["approved", "rejected"])).order_by(Approval.decided_at.desc()).limit(5)
+    query = select(Approval).where(Approval.status.in_([ApprovalStatus.APPROVED, ApprovalStatus.REJECTED])).order_by(Approval.decided_at.desc()).limit(5)
     result = await session.execute(query)
     recent_decisions = list(result.scalars().all())
     
