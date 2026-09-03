@@ -1,0 +1,39 @@
+{% if pending_approvals %}
+<div class="approval-list">
+    {% for approval in pending_approvals %}
+    <div class="approval-card" id="approval-{{ approval.approval_id }}">
+        <div class="approval-header">
+            <span class="tool-badge">{{ approval.tool_name }}</span>
+            <span class="timestamp">{{ approval.created_at.strftime('%H:%M:%S') }}</span>
+        </div>
+        
+        <div class="approval-preview">
+            <p><strong>Preview:</strong> {{ approval.preview_description }}</p>
+        </div>
+        
+        <details class="approval-details">
+            <summary>View arguments</summary>
+            <pre><code>{{ approval.tool_args | tojson }}</code></pre>
+        </details>
+        
+        <div class="approval-actions">
+            <form hx-post="/approve/{{ approval.approval_id }}" 
+                  hx-target="#approval-queue" 
+                  hx-swap="innerHTML">
+                <input type="text" name="approver_name" placeholder="Your name" required>
+                <button type="submit" class="btn-approve">Approve</button>
+            </form>
+            
+            <form hx-post="/reject/{{ approval.approval_id }}" 
+                  hx-target="#approval-queue" 
+                  hx-swap="innerHTML">
+                <input type="text" name="approver_name" placeholder="Your name" required>
+                <button type="submit" class="btn-reject">Reject</button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<p class="empty-state">No pending approvals. All clear.</p>
+{% endif %}

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Asyncraft Agent Kernel{% endblock %}</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Asyncraft Agent Kernel</h1>
+            <p class="tagline">Production-shaped agent runtime with HITL approval</p>
+        </div>
+    </header>
+    
+    <nav>
+        <div class="container">
+            <a href="/">Dashboard</a>
+            <a href="/api/docs" target="_blank">API Docs</a>
+            <span class="skin-indicator">Active skin: <strong>{{ active_skin }}</strong></span>
+        </div>
+    </nav>
+    
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+    
+    <footer>
+        <div class="container">
+            <p>Asyncraft Agent Kernel v0.1.0 | <a href="https://asynccraft.com" target="_blank">asynccraft.com</a></p>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,25 @@
+# Render deployment configuration for Asynccraft Agent Kernel
+# Deploy via Render Dashboard: New Web Service → Connect Git repo → Use this blueprint
+
+services:
+  - type: web
+    name: asynccraft-kernel
+    runtime: docker
+    plan: free
+    branch: main
+    dockerfilePath: ./Dockerfile
+    dockerCommand: sh -c "alembic upgrade head && uvicorn asynccraft.main:app --host 0.0.0.0 --port 8000"
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        value: sqlite:///./asynccraft.db
+      - key: OPENAI_API_KEY
+        value: sk-mock-key-for-demo
+      - key: ACTIVE_SKIN
+        value: ops_dispatch
+      - key: DEBUG
+        value: "false"
+      - key: API_HOST
+        value: 0.0.0.0
+      - key: API_PORT
+        value: "8000"

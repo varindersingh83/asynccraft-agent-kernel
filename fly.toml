@@ -1,0 +1,28 @@
+# Fly.io deployment configuration for Asynccraft Agent Kernel
+# Deploy: fly launch --copy-config --now
+
+app = "asynccraft-kernel"
+primary_region = "iad"
+
+[build]
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+[[vm]]
+  memory = "256mb"
+  cpu_kind = "shared"
+  cpus = 1
+
+[env]
+  DATABASE_URL = "sqlite:///./asynccraft.db"
+  OPENAI_API_KEY = "sk-mock-key-for-demo"
+  ACTIVE_SKIN = "ops_dispatch"
+  DEBUG = "false"
+  API_HOST = "0.0.0.0"
+  API_PORT = "8000"
