@@ -2,8 +2,126 @@
 
 {% block content %}
 <div class="dashboard">
+    <div class="section operator-section">
+        <h2>Operator Control</h2>
+        <div class="operator-selector-container">
+            <label for="operator-selector">Select Operator:</label>
+            <select id="operator-selector" class="operator-select">
+                <option value="">-- Select an operator --</option>
+                {% for operator in mock_operators %}
+                <option value="{{ operator.name }}">{{ operator.name }} ({{ operator.role }})</option>
+                {% endfor %}
+            </select>
+            <div class="operator-display">
+                Current operator: <strong id="selected-operator-display">None selected</strong>
+            </div>
+        </div>
+    </div>
+    
     <div class="section">
-        <h2>Approval Queue</h2>
+        <h2>Workflow Demonstration</h2>
+        <div class="workflow-tabs">
+            <button class="workflow-tab active" onclick="showWorkflow('ops_dispatch')">Ops/Dispatch Workflow</button>
+            <button class="workflow-tab" onclick="showWorkflow('deal_flow')">Deal Flow Workflow</button>
+        </div>
+        
+        <div id="workflow-ops_dispatch" class="workflow-visualization">
+            <div class="workflow-steps">
+                <div class="workflow-step" data-step="ingest">
+                    <div class="step-icon">📥</div>
+                    <div class="step-label">Ingest Exception</div>
+                    <div class="step-desc">Receive delay/breakdown</div>
+                </div>
+                <div class="workflow-arrow">→</div>
+                <div class="workflow-step" data-step="classify">
+                    <div class="step-icon">🔍</div>
+                    <div class="step-label">Classify & Route</div>
+                    <div class="step-desc">Analyze severity</div>
+                </div>
+                <div class="workflow-arrow">→</div>
+                <div class="workflow-step" data-step="propose">
+                    <div class="step-icon">💡</div>
+                    <div class="step-label">Propose Tool</div>
+                    <div class="step-desc">ETA update / Escalate</div>
+                </div>
+                <div class="workflow-arrow">→</div>
+                <div class="workflow-step" data-step="approval-gate">
+                    <div class="step-icon">🚦</div>
+                    <div class="step-label">HITL Approval Gate</div>
+                    <div class="step-desc">Human decision</div>
+                </div>
+                <div class="workflow-arrow">→</div>
+                <div class="workflow-step" data-step="execute">
+                    <div class="step-icon">⚡</div>
+                    <div class="step-label">Execute</div>
+                    <div class="step-desc">Run approved action</div>
+                </div>
+                <div class="workflow-arrow">→</div>
+                <div class="workflow-step" data-step="audit">
+                    <div class="step-icon">📋</div>
+                    <div class="step-label">Audit</div>
+                    <div class="step-desc">Log decision</div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="workflow-deal_flow" class="workflow-visualization" style="display: none;">
+            <div class="workflow-steps">
+                <div class="workflow-step" data-step="ingest">
+                    <div class="step-icon">📨</div>
+                    <div class="step-label">Ingest Pitch</div>
+                    <div class="step-desc">Receive startup pitch</div>
+                </div>
+                <div class="workflow-arrow">→</div>
+                <div class="workflow-step" data-step="score">
+                    <div class="step-icon">⭐</div>
+                    <div class="step-label">Score & Route</div>
+                    <div class="step-desc">Evaluate fit</div>
+                </div>
+                <div class="workflow-arrow">→</div>
+                <div class="workflow-step" data-step="propose">
+                    <div class="step-icon">🔧</div>
+                    <div class="step-label">Propose CRM Tool</div>
+                    <div class="step-desc">Create deal / Notify</div>
+                </div>
+                <div class="workflow-arrow">→</div>
+                <div class="workflow-step" data-step="approval-gate">
+                    <div class="step-icon">🚦</div>
+                    <div class="step-label">HITL Approval Gate</div>
+                    <div class="step-desc">Human decision</div>
+                </div>
+                <div class="workflow-arrow">→</div>
+                <div class="workflow-step" data-step="execute">
+                    <div class="step-icon">⚡</div>
+                    <div class="step-label">Execute</div>
+                    <div class="step-desc">Run approved action</div>
+                </div>
+                <div class="workflow-arrow">→</div>
+                <div class="workflow-step" data-step="audit">
+                    <div class="step-icon">📊</div>
+                    <div class="step-label">Audit</div>
+                    <div class="step-desc">Track decision</div>
+                </div>
+            </div>
+        </div>
+        
+        <script>
+            function showWorkflow(skin) {
+                document.querySelectorAll('.workflow-visualization').forEach(function(el) {
+                    el.style.display = 'none';
+                });
+                document.getElementById('workflow-' + skin).style.display = 'block';
+                
+                document.querySelectorAll('.workflow-tab').forEach(function(tab) {
+                    tab.classList.remove('active');
+                });
+                event.target.classList.add('active');
+            }
+        </script>
+    </div>
+    
+    <div class="section">
+        <h2>Demo Controls</h2>
         <div class="demo-controls">
             <form hx-post="/demo-run" hx-target="#approval-queue" hx-swap="innerHTML">
                 <input type="hidden" name="skin" value="ops_dispatch">
@@ -15,7 +133,10 @@
                 <button type="submit" class="btn-primary">Run Deal Flow Demo</button>
             </form>
         </div>
-        
+    </div>
+    
+    <div class="section">
+        <h2>Approval Queue</h2>
         <div id="approval-queue">
             {% include "approval_queue.html" %}
         </div>
