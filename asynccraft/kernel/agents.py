@@ -4,6 +4,7 @@ import uuid
 from typing import Any, TypedDict
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from asynccraft.kernel.models import AgentRun, AgentMessage, RunStatus
 from asynccraft.kernel.tools import get_tool_registry, Tool
@@ -44,7 +45,7 @@ class BaseAgent:
             raise ValueError(f"Tool {tool_name} not found in registry")
 
         result = await session.execute(
-            "SELECT id FROM agent_runs WHERE run_id = :run_id", {"run_id": state["run_id"]}
+            select(AgentRun.id).where(AgentRun.run_id == state["run_id"])
         )
         run_db_id = result.scalar_one()
 

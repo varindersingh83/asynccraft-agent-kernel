@@ -116,8 +116,9 @@ async def approve(
     
     pending = await approval_service.get_pending_approvals()
     return templates.TemplateResponse(
-        "approval_queue.html",
-        {"request": request, "pending_approvals": pending},
+        request=request,
+        name="approval_queue.html",
+        context={"pending_approvals": pending},
     )
 
 
@@ -134,6 +135,7 @@ async def reject(
     
     pending = await approval_service.get_pending_approvals()
     return templates.TemplateResponse(
-        "approval_queue.html",
-        {"request": request, "pending_approvals": pending},
+        request=request,
+        name="approval_queue.html",
+        context={"pending_approvals": pending},
     )
