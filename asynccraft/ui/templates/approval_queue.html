@@ -60,3 +60,94 @@
     </div>
 </div>
 {% endif %}
+
+<!-- HTMX Out-of-Band Swap: Update Audit Log Panel -->
+{% if sop_state and sop_state.events %}
+<div id="audit-timeline" hx-swap-oob="innerHTML">
+    {% for event in sop_state.events %}
+    {% if event.type == 'log' %}
+    <div class="audit-entry approved">
+        <div class="audit-marker"></div>
+        <div class="audit-content">
+            <div class="audit-header">
+                <span class="tool-badge-sm">{{ event.step_id }}</span>
+                <span class="decision-status completed">COMPLETED</span>
+            </div>
+            <div class="audit-preview">{{ event.message }}</div>
+            <div class="audit-meta">
+                <span class="decision-approver">System</span>
+                <span class="decision-time">Just now</span>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- HTMX Out-of-Band Swap: Update Compliance Panel -->
+{% if sop_state and sop_state.events %}
+<div id="compliance-gates" hx-swap-oob="innerHTML">
+    {% for event in sop_state.events %}
+    {% if event.type == 'compliance' %}
+    <div class="compliance-gate passed">
+        <div class="gate-icon">✓</div>
+        <div class="gate-content">
+            <div class="gate-label">{{ event.step_id }}</div>
+            <div class="gate-status">CHECKED</div>
+            <div class="gate-time">Just now</div>
+        </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- HTMX Out-of-Band Swap: Update Billing Panel -->
+{% if sop_state and sop_state.events %}
+<div id="billing-timeline" hx-swap-oob="innerHTML">
+    {% for event in sop_state.events %}
+    {% if event.type == 'billing' %}
+    <div class="billing-entry">
+        <div class="billing-icon">💵</div>
+        <div class="billing-content">
+            <div class="billing-label">{{ event.step_id }}</div>
+            <div class="billing-desc">{{ event.message }}</div>
+        </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- HTMX Out-of-Band Swap: Update Flowchart Active State -->
+{% if sop_state %}
+<script id="flowchart-update" hx-swap-oob="true">
+(function() {
+    const completedSteps = {{ sop_state.completed_steps | tojson }};
+    const currentStep = {{ ('"' + sop_state.current_step_id + '"') if sop_state.current_step_id else 'null' }};
+    
+    // Clear all active states
+    document.querySelectorAll('.workflow-step, .workflow-decision').forEach(function(el) {
+        el.classList.remove('active', 'completed');
+    });
+    
+    // Mark completed steps
+    completedSteps.forEach(function(stepId) {
+        const el = document.querySelector('[data-step="' + stepId + '"]');
+        if (el) {
+            el.classList.add('completed');
+        }
+    });
+    
+    // Mark current active step
+    if (currentStep) {
+        const el = document.querySelector('[data-step="' + currentStep + '"]');
+        if (el) {
+            el.classList.add('active');
+            el.classList.remove('completed');
+        }
+    }
+})();
+</script>
+{% endif %}
