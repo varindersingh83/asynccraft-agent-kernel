@@ -449,7 +449,7 @@
                     <div class="workflow-step" data-step="ingest">
                         <div class="step-icon">📧</div>
                         <div class="step-label">Ingest Ticket</div>
-                        <div class="step-desc">ops@midwest.com</div>
+                        <div class="step-desc">Lakeshore (Chicago)</div>
                     </div>
                 </div>
                 <div class="flowchart-row"><div class="flow-arrow-down">↓</div></div>
@@ -457,15 +457,15 @@
                     <div class="workflow-step" data-step="classify">
                         <div class="step-icon">🏷️</div>
                         <div class="step-label">Classify Type</div>
-                        <div class="step-desc">DELAY (92%)</div>
+                        <div class="step-desc">BILLING-EXCEPTION</div>
                     </div>
                 </div>
                 <div class="flowchart-row"><div class="flow-arrow-down">↓</div></div>
                 <div class="flowchart-row">
                     <div class="workflow-decision" data-step="severity-gate">
                         <div class="decision-icon">⚡</div>
-                        <div class="step-label">Severity Assessment Gate</div>
-                        <div class="step-desc">HIGH: $450, SLA risk</div>
+                        <div class="step-label">Exception Gate</div>
+                        <div class="step-desc">HIGH: $380 detention</div>
                     </div>
                 </div>
                 <div class="flowchart-row branch-row">
@@ -474,8 +474,8 @@
                             <div class="flow-arrow-left">↙ Reject</div>
                             <div class="workflow-step branch-step" data-step="junk-archive">
                                 <div class="step-icon">🗄️</div>
-                                <div class="step-label">Archive</div>
-                                <div class="step-desc">Routine queue</div>
+                                <div class="step-label">WISMO Auto-Reply</div>
+                                <div class="step-desc">No billing liability</div>
                             </div>
                         </div>
                         <div class="branch-right">
@@ -483,7 +483,7 @@
                             <div class="workflow-step branch-step" data-step="draft-reply">
                                 <div class="step-icon">✍️</div>
                                 <div class="step-label">Draft Reply</div>
-                                <div class="step-desc">$450 detention credit</div>
+                                <div class="step-desc">$380 concession + TMS</div>
                             </div>
                         </div>
                     </div>
@@ -492,8 +492,8 @@
                 <div class="flowchart-row">
                     <div class="workflow-decision" data-step="reply-approve">
                         <div class="decision-icon">✉️</div>
-                        <div class="step-label">Reply Approval Gate</div>
-                        <div class="step-desc">Send to customer?</div>
+                        <div class="step-label">Jane Ortiz (Billing) HITL</div>
+                        <div class="step-desc">Approve $380 concession?</div>
                     </div>
                 </div>
                 <div class="flowchart-row branch-row">
@@ -511,7 +511,7 @@
                             <div class="workflow-step branch-step" data-step="sla-escalate">
                                 <div class="step-icon">📈</div>
                                 <div class="step-label">Manager Escalate?</div>
-                                <div class="step-desc">SLA breach risk</div>
+                                <div class="step-desc">$380 < $500 threshold</div>
                             </div>
                         </div>
                     </div>
@@ -521,7 +521,7 @@
                     <div class="workflow-decision" data-step="sla-escalate">
                         <div class="decision-icon">🚨</div>
                         <div class="step-label">Escalation Gate</div>
-                        <div class="step-desc">$450 < $1K threshold</div>
+                        <div class="step-desc">$380 < $500 threshold</div>
                     </div>
                 </div>
                 <div class="flowchart-row branch-row">
@@ -531,7 +531,7 @@
                             <div class="workflow-step branch-step" data-step="post-tms">
                                 <div class="step-icon">💾</div>
                                 <div class="step-label">Post TMS</div>
-                                <div class="step-desc">EXC-45821</div>
+                                <div class="step-desc">EXC-55212</div>
                             </div>
                         </div>
                         <div class="branch-right">
@@ -539,7 +539,7 @@
                             <div class="workflow-step branch-step" data-step="escalate-manager">
                                 <div class="step-icon">👔</div>
                                 <div class="step-label">Escalate Manager</div>
-                                <div class="step-desc">Sam Okonkwo</div>
+                                <div class="step-desc">High-$ review</div>
                             </div>
                         </div>
                     </div>
@@ -549,7 +549,7 @@
                     <div class="workflow-step final-step" data-step="audit">
                         <div class="step-icon">✅</div>
                         <div class="step-label">Audit + Compliance Log</div>
-                        <div class="step-desc">Trail complete</div>
+                        <div class="step-desc">Prairie Foods notified</div>
                     </div>
                 </div>
             </div>
@@ -568,7 +568,7 @@
                     <div class="workflow-step" data-step="call-ingest">
                         <div class="step-icon">📱</div>
                         <div class="step-label">Ingest Call</div>
-                        <div class="step-desc">Mike Rodriguez 22:10</div>
+                        <div class="step-desc">Cold Chain (Atlanta)</div>
                     </div>
                 </div>
                 <div class="flowchart-row"><div class="flow-arrow-down">↓</div></div>
@@ -576,7 +576,7 @@
                     <div class="workflow-step" data-step="transcribe">
                         <div class="step-icon">🎙️</div>
                         <div class="step-label">Transcribe Voice</div>
-                        <div class="step-desc">145 seconds</div>
+                        <div class="step-desc">Pinnacle Transport</div>
                     </div>
                 </div>
                 <div class="flowchart-row"><div class="flow-arrow-down">↓</div></div>
@@ -584,15 +584,15 @@
                     <div class="workflow-step" data-step="extract-fields">
                         <div class="step-icon">📍</div>
                         <div class="step-label">Extract Fields</div>
-                        <div class="step-desc">I-55, TRUCK-2847</div>
+                        <div class="step-desc">MC-123456, $2,600</div>
                     </div>
                 </div>
                 <div class="flowchart-row"><div class="flow-arrow-down">↓</div></div>
                 <div class="flowchart-row">
                     <div class="workflow-decision" data-step="severity-gate">
                         <div class="decision-icon">🚨</div>
-                        <div class="step-label">Emergency Assessment Gate</div>
-                        <div class="step-desc">EMERGENCY: Reefer alarm</div>
+                        <div class="step-label">FMCSA / Chameleon-MC Gate</div>
+                        <div class="step-desc">MC-123456 CLEARED</div>
                     </div>
                 </div>
                 <div class="flowchart-row branch-row">
@@ -600,17 +600,17 @@
                         <div class="branch-left">
                             <div class="flow-arrow-left">↙ Reject</div>
                             <div class="workflow-step branch-step" data-step="queue-morning">
-                                <div class="step-icon">🌅</div>
-                                <div class="step-label">Queue Morning</div>
-                                <div class="step-desc">Non-emergency</div>
+                                <div class="step-icon">🛑</div>
+                                <div class="step-label">FMCSA Hold</div>
+                                <div class="step-desc">Carrier rejected</div>
                             </div>
                         </div>
                         <div class="branch-right">
                             <div class="flow-arrow-right">Approve ↘</div>
                             <div class="workflow-step branch-step" data-step="propose-tech">
-                                <div class="step-icon">🔧</div>
-                                <div class="step-label">Propose Tech</div>
-                                <div class="step-desc">Carlos (ETA 45min)</div>
+                                <div class="step-icon">💰</div>
+                                <div class="step-label">Rate Check</div>
+                                <div class="step-desc">$2,600 < $2,800</div>
                             </div>
                         </div>
                     </div>
@@ -619,8 +619,8 @@
                 <div class="flowchart-row">
                     <div class="workflow-decision" data-step="assign-approve">
                         <div class="decision-icon">✅</div>
-                        <div class="step-label">Assignment Approval Gate</div>
-                        <div class="step-desc">Dispatch tech?</div>
+                        <div class="step-label">John Hale Rate-Con HITL</div>
+                        <div class="step-desc">Approve $2,600?</div>
                     </div>
                 </div>
                 <div class="flowchart-row branch-row">
@@ -629,16 +629,16 @@
                             <div class="flow-arrow-left">↙ Reject</div>
                             <div class="workflow-step branch-step" data-step="assignment-hold">
                                 <div class="step-icon">⏸️</div>
-                                <div class="step-label">Hold / Reassign</div>
-                                <div class="step-desc">Manual override</div>
+                                <div class="step-label">Hold / Negotiate</div>
+                                <div class="step-desc">Renegotiate rate</div>
                             </div>
                         </div>
                         <div class="branch-right">
                             <div class="flow-arrow-right">Approve ↘</div>
                             <div class="workflow-step branch-step" data-step="notify-shipper">
                                 <div class="step-icon">📧</div>
-                                <div class="step-label">Notify Shipper?</div>
-                                <div class="step-desc">Fresh Foods Dist</div>
+                                <div class="step-label">Check-Call + Notify</div>
+                                <div class="step-desc">Atlanta Cold Storage</div>
                             </div>
                         </div>
                     </div>
@@ -648,7 +648,7 @@
                     <div class="workflow-decision" data-step="notify-shipper">
                         <div class="decision-icon">📨</div>
                         <div class="step-label">Shipper Notification Gate</div>
-                        <div class="step-desc">Send ETA update?</div>
+                        <div class="step-desc">Send pickup confirm?</div>
                     </div>
                 </div>
                 <div class="flowchart-row branch-row">
@@ -657,16 +657,16 @@
                             <div class="flow-arrow-left">↙ Reject</div>
                             <div class="workflow-step branch-step" data-step="create-wo">
                                 <div class="step-icon">📋</div>
-                                <div class="step-label">Create WO</div>
-                                <div class="step-desc">Skip notification</div>
+                                <div class="step-label">Book Load</div>
+                                <div class="step-desc">Skip shipper notify</div>
                             </div>
                         </div>
                         <div class="branch-right">
                             <div class="flow-arrow-right">Approve ↘</div>
                             <div class="workflow-step branch-step" data-step="send-notification">
                                 <div class="step-icon">✉️</div>
-                                <div class="step-label">Send ETA</div>
-                                <div class="step-desc">Tech en route</div>
+                                <div class="step-label">Send Pickup Confirm</div>
+                                <div class="step-desc">Shipper notified</div>
                             </div>
                         </div>
                     </div>
@@ -675,16 +675,16 @@
                 <div class="flowchart-row">
                     <div class="workflow-step" data-step="create-wo">
                         <div class="step-icon">📝</div>
-                        <div class="step-label">Create Work Order</div>
-                        <div class="step-desc">WO-28470</div>
+                        <div class="step-label">Create Load Booking</div>
+                        <div class="step-desc">BK-18402</div>
                     </div>
                 </div>
                 <div class="flowchart-row"><div class="flow-arrow-down">↓</div></div>
                 <div class="flowchart-row">
                     <div class="workflow-step final-step" data-step="audit">
                         <div class="step-icon">✅</div>
-                        <div class="step-label">Audit + Billing Touch</div>
-                        <div class="step-desc">After-hours fee</div>
+                        <div class="step-label">Audit + Phone Channel Log</div>
+                        <div class="step-desc">Carrier booked</div>
                     </div>
                 </div>
             </div>

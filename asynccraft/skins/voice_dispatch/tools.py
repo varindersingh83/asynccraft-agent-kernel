@@ -76,116 +76,114 @@ class ExtractFieldsTool(Tool):
         return f"Extract fields: {issue_type} at {location} (Asset: {asset_id})"
 
 
-class AssessEmergencySeverityTool(Tool):
-    """Assess if call is after-hours emergency requiring immediate dispatch."""
+class CheckFMCSAComplianceTool(Tool):
+    """FMCSA / chameleon-MC diamond compliance check gate."""
     
     @property
     def name(self) -> str:
-        return "assess_emergency_severity"
+        return "check_fmcsa_compliance"
     
     @property
     def description(self) -> str:
-        return "Determine if issue is emergency requiring after-hours response vs morning queue"
+        return "FMCSA clearance + chameleon-MC diamond check before carrier approval"
     
     async def execute(self, **kwargs: Any) -> ToolResult:
-        """Execute emergency severity assessment."""
-        issue_type = kwargs.get("issue_type", "")
-        severity = kwargs.get("severity", "routine")
-        time_of_day = kwargs.get("time_of_day", "business_hours")
-        cargo_sensitive = kwargs.get("cargo_sensitive", False)
+        """Execute FMCSA compliance check."""
+        carrier_name = kwargs.get("carrier_name", "")
+        mc_number = kwargs.get("mc_number", "")
+        fmcsa_status = kwargs.get("fmcsa_status", "cleared")
         
-        is_emergency = severity == "emergency" or (cargo_sensitive and issue_type in ["reefer_alarm", "breakdown"])
+        is_compliant = fmcsa_status == "cleared"
         return ToolResult(
             success=True,
             data={
-                "issue_type": issue_type,
-                "severity": severity,
-                "is_emergency": is_emergency,
-                "time_of_day": time_of_day,
-                "cargo_sensitive": cargo_sensitive,
+                "carrier_name": carrier_name,
+                "mc_number": mc_number,
+                "fmcsa_status": fmcsa_status,
+                "is_compliant": is_compliant,
             }
         )
     
     def preview(self, **kwargs: Any) -> str:
-        issue_type = kwargs.get("issue_type", "")
-        severity = kwargs.get("severity", "routine")
-        is_emergency = severity == "emergency"
-        status = "EMERGENCY" if is_emergency else "routine"
-        return f"Emergency assessment: {status} ({issue_type}, {severity} severity)"
+        carrier_name = kwargs.get("carrier_name", "")
+        mc_number = kwargs.get("mc_number", "")
+        fmcsa_status = kwargs.get("fmcsa_status", "cleared")
+        status = "PASS" if fmcsa_status == "cleared" else "FAIL"
+        return f"FMCSA check: {carrier_name} ({mc_number}) → {status}"
 
 
-class ProposeTechAssignmentTool(Tool):
-    """Propose nearest technician for assignment."""
+class CheckRateCeilingTool(Tool):
+    """Check if carrier rate quote is within $2,800 ceiling."""
     
     @property
     def name(self) -> str:
-        return "propose_tech_assignment"
+        return "check_rate_ceiling"
     
     @property
     def description(self) -> str:
-        return "Find and propose nearest available technician with ETA"
+        return "Verify carrier rate quote is within $2,800 ceiling for approval"
     
     async def execute(self, **kwargs: Any) -> ToolResult:
-        """Execute tech proposal."""
-        location = kwargs.get("location", "")
-        issue_type = kwargs.get("issue_type", "")
-        tech_name = kwargs.get("tech_name", "")
-        tech_id = kwargs.get("tech_id", "")
-        eta_minutes = kwargs.get("eta_minutes", 0)
+        """Execute rate ceiling check."""
+        carrier_name = kwargs.get("carrier_name", "")
+        rate_quoted = kwargs.get("rate_quoted", 0.0)
+        rate_ceiling = kwargs.get("rate_ceiling", 2800.0)
         
+        within_ceiling = rate_quoted <= rate_ceiling
         return ToolResult(
             success=True,
             data={
-                "location": location,
-                "issue_type": issue_type,
-                "tech_name": tech_name,
-                "tech_id": tech_id,
-                "eta_minutes": eta_minutes,
-                "distance_miles": eta_minutes / 1.2,
+                "carrier_name": carrier_name,
+                "rate_quoted": rate_quoted,
+                "rate_ceiling": rate_ceiling,
+                "within_ceiling": within_ceiling,
+                "variance": rate_quoted - rate_ceiling,
             }
         )
     
     def preview(self, **kwargs: Any) -> str:
-        tech_name = kwargs.get("tech_name", "")
-        eta_minutes = kwargs.get("eta_minutes", 0)
-        location = kwargs.get("location", "")
-        return f"Tech proposal: {tech_name} → {location} (ETA {eta_minutes} min)"
+        carrier_name = kwargs.get("carrier_name", "")
+        rate_quoted = kwargs.get("rate_quoted", 0.0)
+        rate_ceiling = kwargs.get("rate_ceiling", 2800.0)
+        status = "PASS" if rate_quoted <= rate_ceiling else f"OVER by ${rate_quoted - rate_ceiling:.0f}"
+        return f"Rate check: {carrier_name} ${rate_quoted:.0f} vs ${rate_ceiling:.0f} ceiling → {status}"
 
 
-class ApproveAssignmentTool(Tool):
-    """Approve or hold technician assignment."""
+class ApproveRateConTool(Tool):
+    """John Hale HITL gate: approve rate-con send to carrier."""
     
     @property
     def name(self) -> str:
-        return "approve_assignment"
+        return "approve_rate_con"
     
     @property
     def description(self) -> str:
-        return "Review and approve technician assignment before dispatch"
+        return "John Hale gate: approve rate confirmation send to carrier"
     
     async def execute(self, **kwargs: Any) -> ToolResult:
-        """Execute assignment approval."""
-        tech_name = kwargs.get("tech_name", "")
-        tech_id = kwargs.get("tech_id", "")
-        eta_minutes = kwargs.get("eta_minutes", 0)
-        asset_id = kwargs.get("asset_id", "")
+        """Execute rate-con approval."""
+        carrier_name = kwargs.get("carrier_name", "")
+        rate_quoted = kwargs.get("rate_quoted", 0.0)
+        load_id = kwargs.get("load_id", "")
+        route = kwargs.get("route", "")
         
         return ToolResult(
             success=True,
             data={
-                "tech_name": tech_name,
-                "tech_id": tech_id,
-                "eta_minutes": eta_minutes,
-                "asset_id": asset_id,
-                "assignment_id": f"ASGN-{hash(tech_id) % 100000}",
+                "carrier_name": carrier_name,
+                "rate_quoted": rate_quoted,
+                "load_id": load_id,
+                "route": route,
+                "approver": "John Hale",
+                "rate_con_id": f"RC-{hash(load_id) % 100000}",
             }
         )
     
     def preview(self, **kwargs: Any) -> str:
-        tech_name = kwargs.get("tech_name", "")
-        asset_id = kwargs.get("asset_id", "")
-        eta_minutes = kwargs.get("eta_minutes", 0)
-        return f"Assignment approval: {tech_name} to Asset {asset_id} (ETA {eta_minutes} min)"
+        carrier_name = kwargs.get("carrier_name", "")
+        rate_quoted = kwargs.get("rate_quoted", 0.0)
+        load_id = kwargs.get("load_id", "")
+        return f"John Hale gate: Rate-con ${rate_quoted:.0f} to {carrier_name} for {load_id}"
 
 
 class ApproveShipperNotificationTool(Tool):
@@ -223,38 +221,38 @@ class ApproveShipperNotificationTool(Tool):
         return f"Shipper notification: {shipper_name} ({shipper_contact}) - Tech {tech_name} dispatched"
 
 
-class CreateWorkOrderTool(Tool):
-    """Create work order in dispatch system."""
+class CreateLoadBookingTool(Tool):
+    """Create load booking with carrier in TMS."""
     
     @property
     def name(self) -> str:
-        return "create_work_order"
+        return "create_load_booking"
     
     @property
     def description(self) -> str:
-        return "Create work order with asset, tech, and issue details"
+        return "Create load booking with carrier in TMS after rate-con approval"
     
     async def execute(self, **kwargs: Any) -> ToolResult:
-        """Execute work order creation."""
-        asset_id = kwargs.get("asset_id", "")
-        tech_id = kwargs.get("tech_id", "")
-        issue_type = kwargs.get("issue_type", "")
-        location = kwargs.get("location", "")
+        """Execute load booking creation."""
+        load_id = kwargs.get("load_id", "")
+        carrier_name = kwargs.get("carrier_name", "")
+        rate_quoted = kwargs.get("rate_quoted", 0.0)
+        route = kwargs.get("route", "")
         
         return ToolResult(
             success=True,
             data={
-                "asset_id": asset_id,
-                "tech_id": tech_id,
-                "issue_type": issue_type,
-                "location": location,
-                "work_order_id": f"WO-{hash(asset_id) % 100000}",
-                "created_at": "2026-09-03T22:30:00Z",
+                "load_id": load_id,
+                "carrier_name": carrier_name,
+                "rate_quoted": rate_quoted,
+                "route": route,
+                "booking_id": f"BK-{hash(load_id) % 100000}",
+                "created_at": "2026-09-03T14:45:00Z",
             }
         )
     
     def preview(self, **kwargs: Any) -> str:
-        asset_id = kwargs.get("asset_id", "")
-        tech_id = kwargs.get("tech_id", "")
-        issue_type = kwargs.get("issue_type", "")
-        return f"Work order: Asset {asset_id} → {issue_type} (Tech: {tech_id})"
+        load_id = kwargs.get("load_id", "")
+        carrier_name = kwargs.get("carrier_name", "")
+        rate_quoted = kwargs.get("rate_quoted", 0.0)
+        return f"Load booking: {load_id} → {carrier_name} @ ${rate_quoted:.0f}"

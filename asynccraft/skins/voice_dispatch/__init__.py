@@ -5,11 +5,11 @@ from asynccraft.skins.voice_dispatch.sop_runner import SOPRunner, VOICE_DISPATCH
 from asynccraft.skins.voice_dispatch.tools import (
     TranscribeCallTool,
     ExtractFieldsTool,
-    AssessEmergencySeverityTool,
-    ProposeTechAssignmentTool,
-    ApproveAssignmentTool,
+    CheckFMCSAComplianceTool,
+    CheckRateCeilingTool,
+    ApproveRateConTool,
     ApproveShipperNotificationTool,
-    CreateWorkOrderTool,
+    CreateLoadBookingTool,
 )
 
 __all__ = [
@@ -20,9 +20,9 @@ __all__ = [
     "GateDecision",
     "TranscribeCallTool",
     "ExtractFieldsTool",
-    "AssessEmergencySeverityTool",
-    "ProposeTechAssignmentTool",
-    "ApproveAssignmentTool",
+    "CheckFMCSAComplianceTool",
+    "CheckRateCeilingTool",
+    "ApproveRateConTool",
     "ApproveShipperNotificationTool",
-    "CreateWorkOrderTool",
+    "CreateLoadBookingTool",
 ]

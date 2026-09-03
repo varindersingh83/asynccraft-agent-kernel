@@ -42,11 +42,11 @@ from asynccraft.skins.inbox_triage.tools import (
 from asynccraft.skins.voice_dispatch.tools import (
     TranscribeCallTool,
     ExtractFieldsTool,
-    AssessEmergencySeverityTool,
-    ProposeTechAssignmentTool,
-    ApproveAssignmentTool,
+    CheckFMCSAComplianceTool,
+    CheckRateCeilingTool,
+    ApproveRateConTool,
     ApproveShipperNotificationTool,
-    CreateWorkOrderTool,
+    CreateLoadBookingTool,
 )
 
 
@@ -89,11 +89,11 @@ async def lifespan(app: FastAPI):
     # Register voice_dispatch tools
     register_tool(TranscribeCallTool())
     register_tool(ExtractFieldsTool())
-    register_tool(AssessEmergencySeverityTool())
-    register_tool(ProposeTechAssignmentTool())
-    register_tool(ApproveAssignmentTool())
+    register_tool(CheckFMCSAComplianceTool())
+    register_tool(CheckRateCeilingTool())
+    register_tool(ApproveRateConTool())
     register_tool(ApproveShipperNotificationTool())
-    register_tool(CreateWorkOrderTool())
+    register_tool(CreateLoadBookingTool())
     
     yield
 

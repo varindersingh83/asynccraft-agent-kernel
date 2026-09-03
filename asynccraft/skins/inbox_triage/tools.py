@@ -5,7 +5,7 @@ from asynccraft.kernel.tools import Tool, ToolResult
 
 
 class ClassifyTicketTool(Tool):
-    """Classify incoming ticket type (delay/accessorial/claim/junk)."""
+    """Classify incoming ticket type (billing-exception vs WISMO auto-reply)."""
     
     @property
     def name(self) -> str:
@@ -13,14 +13,14 @@ class ClassifyTicketTool(Tool):
     
     @property
     def description(self) -> str:
-        return "Classify inbound ticket into category: delay, accessorial, claim, or junk"
+        return "Classify inbound ticket: billing-exception (detention/accessorial) or WISMO (auto-reply)"
     
     async def execute(self, **kwargs: Any) -> ToolResult:
         """Execute ticket classification."""
         subject = kwargs.get("subject", "")
         body_preview = kwargs.get("body_preview", "")
         sender = kwargs.get("sender", "")
-        category = kwargs.get("category", "delay")
+        category = kwargs.get("category", "billing-exception")
         
         return ToolResult(
             success=True,
@@ -29,14 +29,14 @@ class ClassifyTicketTool(Tool):
                 "category": category,
                 "sender": sender,
                 "body_preview": body_preview,
-                "confidence": 0.92,
+                "confidence": 0.94,
             }
         )
     
     def preview(self, **kwargs: Any) -> str:
         subject = kwargs.get("subject", "")
-        category = kwargs.get("category", "delay")
-        return f"Classify ticket: '{subject}' → {category.upper()} (92% confidence)"
+        category = kwargs.get("category", "billing-exception")
+        return f"Classify: '{subject}' → {category.upper()} (94% confidence)"
 
 
 class AssessSeverityTool(Tool):
@@ -77,7 +77,7 @@ class AssessSeverityTool(Tool):
 
 
 class ApproveReplyTool(Tool):
-    """Approve or hold draft reply before sending to customer."""
+    """Jane Ortiz (Billing) HITL gate before any concession/reply."""
     
     @property
     def name(self) -> str:
@@ -85,14 +85,14 @@ class ApproveReplyTool(Tool):
     
     @property
     def description(self) -> str:
-        return "Review and approve draft reply email before sending to customer"
+        return "Jane Ortiz (Billing) liability gate: approve concession before customer reply"
     
     async def execute(self, **kwargs: Any) -> ToolResult:
-        """Execute reply approval."""
+        """Execute reply approval by Jane Ortiz."""
         to_email = kwargs.get("to_email", "")
         subject = kwargs.get("subject", "")
         draft_preview = kwargs.get("draft_preview", "")
-        category = kwargs.get("category", "")
+        concession_amount = kwargs.get("concession_amount", 0.0)
         
         return ToolResult(
             success=True,
@@ -100,16 +100,16 @@ class ApproveReplyTool(Tool):
                 "to_email": to_email,
                 "subject": subject,
                 "draft_preview": draft_preview,
-                "category": category,
-                "draft_id": f"draft_{category}_{hash(to_email) % 10000}",
+                "concession_amount": concession_amount,
+                "approver": "Jane Ortiz (Billing)",
+                "draft_id": f"draft_L{hash(to_email) % 10000}",
             }
         )
     
     def preview(self, **kwargs: Any) -> str:
+        concession_amount = kwargs.get("concession_amount", 0.0)
         to_email = kwargs.get("to_email", "")
-        subject = kwargs.get("subject", "")
-        category = kwargs.get("category", "")
-        return f"Reply draft ready ({category}): '{subject}' → {to_email}"
+        return f"Jane Ortiz (Billing) gate: ${concession_amount:.0f} concession → {to_email}"
 
 
 class CheckEscalateNeededTool(Tool):
