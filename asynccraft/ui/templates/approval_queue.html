@@ -20,15 +20,13 @@
             <form hx-post="/approve/{{ approval.approval_id }}" 
                   hx-target="#approval-queue" 
                   hx-swap="innerHTML">
-                <input type="text" name="approver_name" placeholder="Your name" required>
-                <button type="submit" class="btn-approve">Approve</button>
+                <button type="submit" class="btn-approve">✓ Approve</button>
             </form>
             
             <form hx-post="/reject/{{ approval.approval_id }}" 
                   hx-target="#approval-queue" 
                   hx-swap="innerHTML">
-                <input type="text" name="approver_name" placeholder="Your name" required>
-                <button type="submit" class="btn-reject">Reject</button>
+                <button type="submit" class="btn-reject">✗ Reject</button>
             </form>
         </div>
     </div>
@@ -36,4 +34,29 @@
 </div>
 {% else %}
 <p class="empty-state">No pending approvals. All clear.</p>
+{% endif %}
+
+{% if recent_decisions %}
+<div class="audit-trail">
+    <h3>Recent Decisions</h3>
+    <div class="decision-list">
+        {% for decision in recent_decisions %}
+        <div class="decision-card {{ decision.status }}">
+            <div class="decision-header">
+                <span class="tool-badge-sm">{{ decision.tool_name }}</span>
+                <span class="decision-status {{ decision.status }}">
+                    {% if decision.status == 'approved' %}✓ Approved{% else %}✗ Rejected{% endif %}
+                </span>
+            </div>
+            <div class="decision-body">
+                <p class="decision-preview">{{ decision.preview_description }}</p>
+                <div class="decision-meta">
+                    <span class="decision-approver">👤 {{ decision.approver_name }}</span>
+                    <span class="decision-time">{{ decision.decided_at.strftime('%H:%M:%S') if decision.decided_at else '' }}</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
 {% endif %}
