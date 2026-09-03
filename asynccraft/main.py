@@ -20,28 +20,55 @@ from asynccraft.skins.deal_flow.tools import (
     UpdateDealStageTool,
     AddDealNoteTool,
 )
+from asynccraft.skins.crm_followup.tools import (
+    AssessLeadScoreTool,
+    ApproveEmailDraftTool,
+    CheckManagerReviewNeededTool,
+    UpdateCRMStageTool,
+)
+from asynccraft.skins.invoice_ap.tools import (
+    AssessThreeWayMatchTool,
+    ApproveAPCorrectionTool,
+    CheckVendorComplianceTool,
+    PostToAPTool,
+)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
     
+    # Register ops_dispatch tools
     register_tool(NotifyDispatcherTool())
     register_tool(RerouteTruckTool())
     register_tool(UpdateDeliveryETATool())
     register_tool(EscalateToManagerTool())
+    
+    # Register deal_flow tools
     register_tool(CreateCRMDealTool())
     register_tool(SendPartnerNotificationTool())
     register_tool(SchedulePartnerCallTool())
     register_tool(UpdateDealStageTool())
     register_tool(AddDealNoteTool())
     
+    # Register crm_followup tools
+    register_tool(AssessLeadScoreTool())
+    register_tool(ApproveEmailDraftTool())
+    register_tool(CheckManagerReviewNeededTool())
+    register_tool(UpdateCRMStageTool())
+    
+    # Register invoice_ap tools
+    register_tool(AssessThreeWayMatchTool())
+    register_tool(ApproveAPCorrectionTool())
+    register_tool(CheckVendorComplianceTool())
+    register_tool(PostToAPTool())
+    
     yield
 
 
 app = FastAPI(
-    title="Asyncraft Agent Kernel",
-    description="Production-shaped agent runtime with HITL approval flow",
+    title="Asyncraft Agent Kernel — SME Ops Demos",
+    description="Production-shaped agent runtime with HITL approval flow for freight dispatch, CRM follow-up, and invoice/AP workflows",
     version="0.1.0",
     lifespan=lifespan,
 )

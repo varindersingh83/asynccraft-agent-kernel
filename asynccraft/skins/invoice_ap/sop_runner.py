@@ -1,4 +1,4 @@
-"""SOP (Standard Operating Procedure) runner for Dispatch workflow."""
+"""SOP (Standard Operating Procedure) runner for Invoice/AP Exception workflow."""
 
 from dataclasses import dataclass
 from enum import Enum
@@ -40,136 +40,122 @@ class SOPStep:
     billing_event: str | None = None
 
 
-# Dispatch SOP Definition
-DISPATCH_SOP = [
+# Invoice/AP SOP Definition
+INVOICE_AP_SOP = [
     SOPStep(
         id="ingest",
-        label="Ingest Load Request",
+        label="Ingest Invoice",
         step_type=StepType.AUTO,
-        next_step="create-load",
-        log_event="Email received: Urgent shipment request Chicago → Dallas (12 pallets, refrigerated)",
+        next_step="three-way-match",
+        log_event="Invoice received: INV-2026-0891 from Acme Parts Supply (Chicago, IL)",
     ),
     SOPStep(
-        id="create-load",
-        label="Create Load in TMS",
+        id="three-way-match",
+        label="3-Way Match",
         step_type=StepType.AUTO,
-        next_step="add-equipment",
-        log_event="Load created: SHP-20260903-042, Chicago IL (60601) → Dallas TX (75201), 12 pallets",
+        next_step="match-result",
+        log_event="Running 3-way match: PO-4523 vs Invoice INV-2026-0891 vs Receipt GR-7821",
     ),
     SOPStep(
-        id="add-equipment",
-        label="Assign Equipment + Driver",
-        step_type=StepType.AUTO,
-        next_step="compliance-check",
-        log_event="Equipment assigned: Truck #T-789 (Refrigerated trailer), Driver: Mike Torres (CDL-A)",
-    ),
-    SOPStep(
-        id="compliance-check",
-        label="Compliance Check Gate",
+        id="match-result",
+        label="Match Pass/Fail?",
         step_type=StepType.GATE,
-        tool_name="check_compliance",
+        tool_name="assess_three_way_match",
         tool_args_template={
-            "shipment_id": "SHP-20260903-042",
-            "driver_id": "drv_mike_torres",
-            "truck_id": "T-789",
-            "check_types": ["insurance_current", "cdl_valid", "dot_hours", "reefer_cert"],
+            "invoice_id": "INV-2026-0891",
+            "po_id": "PO-4523",
+            "receipt_id": "GR-7821",
+            "discrepancies": [
+                {"type": "quantity", "po_qty": 100, "invoice_qty": 105, "received_qty": 100},
+                {"type": "unit_price", "po_price": 24.50, "invoice_price": 24.50},
+            ],
         },
-        on_approve="ask-drivers",
-        on_reject="compliance-escalate",
-        compliance_event="Compliance: Insurance ✓ | CDL valid ✓ | DOT hours OK ✓ | Reefer cert ✓",
+        on_approve="auto-post",  # Match passed
+        on_reject="propose-correction",  # Mismatch found
+        log_event="Mismatch detected: Invoice qty 105 > PO qty 100 (Overage: 5 units × $24.50)",
     ),
     SOPStep(
-        id="compliance-escalate",
-        label="Escalate Compliance Hold",
+        id="auto-post",
+        label="Auto-post (Clean Match)",
+        step_type=StepType.AUTO,
+        next_step="gl-writeback",
+        log_event="Clean match: Auto-posting to AP without manual review",
+    ),
+    SOPStep(
+        id="propose-correction",
+        label="Propose Correction",
+        step_type=StepType.AUTO,
+        next_step="correction-approve",
+        log_event="Proposed resolution: Accept overage (5 units) as valid, adjust PO to 105 units",
+    ),
+    SOPStep(
+        id="correction-approve",
+        label="Approve Correction?",
+        step_type=StepType.GATE,
+        tool_name="approve_ap_correction",
+        tool_args_template={
+            "invoice_id": "INV-2026-0891",
+            "correction_type": "quantity_overage",
+            "original_amount": 2450.00,
+            "corrected_amount": 2572.50,
+            "delta": 122.50,
+            "reason": "Vendor shipped 5 extra units (within tolerance), buyer accepted",
+        },
+        on_approve="vendor-check",
+        on_reject="exception-hold",
+        log_event="Correction pending approval: +$122.50 overage adjustment",
+    ),
+    SOPStep(
+        id="exception-hold",
+        label="Exception Hold",
         step_type=StepType.AUTO,
         next_step=None,  # Terminal branch
-        log_event="Compliance FAIL: Load held, escalated to safety manager for manual review",
+        log_event="Correction rejected: Invoice placed on hold for AP manager review",
     ),
     SOPStep(
-        id="ask-drivers",
-        label="Request Driver Confirmation",
-        step_type=StepType.AUTO,
-        next_step="driver-confirm",
-        log_event="Confirmation request sent to Mike Torres via mobile app (pickup: 2026-09-04 06:00 CST)",
-    ),
-    SOPStep(
-        id="driver-confirm",
-        label="Driver Confirm Gate",
+        id="vendor-check",
+        label="Vendor Compliance?",
         step_type=StepType.GATE,
-        tool_name="confirm_driver_acceptance",
+        tool_name="check_vendor_compliance",
         tool_args_template={
-            "driver_id": "drv_mike_torres",
-            "shipment_id": "SHP-20260903-042",
-            "pickup_time": "2026-09-04 06:00 CST",
-            "route": "Chicago IL → Dallas TX via I-55 S",
+            "vendor_id": "VEN-00234",
+            "vendor_name": "Acme Parts Supply",
+            "checks": ["payment_terms_current", "no_open_disputes", "credit_limit"],
+            "invoice_amount": 2572.50,
         },
-        on_approve="traffic-weather",
-        on_reject="re-ask-broker",
-        log_event="Driver response pending: Mike Torres notified, awaiting confirmation...",
+        on_approve="post-to-ap",
+        on_reject="vendor-hold",
+        compliance_event="Vendor check: Payment terms current, no disputes, credit OK",
     ),
     SOPStep(
-        id="re-ask-broker",
-        label="Find Alt Driver / Broker",
+        id="vendor-hold",
+        label="Vendor Hold",
         step_type=StepType.AUTO,
         next_step=None,  # Terminal branch
-        log_event="Driver declined: Searching backup drivers in Chicago area or brokering to partner carrier",
+        log_event="Vendor compliance issue: Invoice held pending resolution",
     ),
     SOPStep(
-        id="traffic-weather",
-        label="Check Traffic + Weather",
+        id="post-to-ap",
+        label="Post to AP",
         step_type=StepType.AUTO,
-        next_step="weather-check",
-        log_event="Conditions: I-55 S clear, moderate traffic, weather advisory for heavy rain in southern IL",
+        next_step="gl-writeback",
+        log_event="Invoice posted to AP: $2,572.50, Due date: 2026-10-03 (Net 30)",
+        billing_event="AP entry created: INV-2026-0891, Amount: $2,572.50, Vendor: Acme Parts Supply",
     ),
     SOPStep(
-        id="weather-check",
-        label="Weather Risk Gate",
-        step_type=StepType.GATE,
-        tool_name="assess_weather_risk",
-        tool_args_template={
-            "route": "I-55 S: Chicago IL → Springfield IL → St Louis MO → Dallas TX",
-            "shipment_id": "SHP-20260903-042",
-            "weather_conditions": "Heavy rain forecast southern IL, wind gusts 30-40mph",
-        },
-        on_approve="reroute-approval",  # Severe weather → reroute
-        on_reject="delivery-windows",   # Acceptable conditions → proceed
-        log_event="Weather assessment: Heavy rain southern IL (manageable), winds 30-40mph (within limits)",
-    ),
-    SOPStep(
-        id="reroute-approval",
-        label="Reroute / Delay Load",
+        id="gl-writeback",
+        label="GL Writeback",
         step_type=StepType.AUTO,
-        next_step="delivery-windows",
-        log_event="Reroute approved: Alternate via I-57 S to avoid storm system, ETA +45min adjustment",
+        next_step="audit",
+        log_event="GL updated: Dr. Inventory $2,572.50, Cr. Accounts Payable $2,572.50",
     ),
     SOPStep(
-        id="delivery-windows",
-        label="Confirm Delivery Window",
-        step_type=StepType.AUTO,
-        next_step="coordinator",
-        log_event="Delivery window confirmed: 2026-09-05 10:00-14:00 CST at Dallas distribution center",
-    ),
-    SOPStep(
-        id="coordinator",
-        label="Assign Load Coordinator",
-        step_type=StepType.AUTO,
-        next_step="delivery",
-        log_event="Load coordinator assigned: Sarah Kim (Midwest region ops) monitoring shipment in transit",
-    ),
-    SOPStep(
-        id="delivery",
-        label="Delivery In Progress",
-        step_type=StepType.AUTO,
-        next_step="pod-billing",
-        log_event="Shipment en route: Truck T-789 departed Chicago 06:15 CST, ETA Dallas 2026-09-05 12:30 CST",
-    ),
-    SOPStep(
-        id="pod-billing",
-        label="POD Received → Billing",
+        id="audit",
+        label="Audit + Compliance Log",
         step_type=StepType.AUTO,
         next_step=None,  # Terminal success
-        log_event="POD received: Delivered Dallas 2026-09-05 12:45 CST, signature on file",
-        billing_event="Invoice generated: INV-2026-0903-042, Amount: $3,280.00 (line haul + fuel surcharge + reefer)",
+        log_event="Invoice processed: INV-2026-0891 cleared, AP posted, GL synced",
+        compliance_event="Audit trail: 3-way match override approved, correction $122.50, posted by John Chen",
     ),
 ]
 
@@ -190,7 +176,7 @@ class SOPRunner:
     
     def start(self) -> SOPStep:
         """Start the SOP from the first step."""
-        first_step = DISPATCH_SOP[0]
+        first_step = INVOICE_AP_SOP[0]
         self.current_step_id = first_step.id
         return first_step
     

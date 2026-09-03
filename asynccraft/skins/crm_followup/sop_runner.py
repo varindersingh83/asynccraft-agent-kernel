@@ -1,4 +1,4 @@
-"""SOP (Standard Operating Procedure) runner for Dispatch workflow."""
+"""SOP (Standard Operating Procedure) runner for CRM Follow-up workflow."""
 
 from dataclasses import dataclass
 from enum import Enum
@@ -37,139 +37,118 @@ class SOPStep:
     # Audit/logging metadata
     log_event: str | None = None
     compliance_event: str | None = None
-    billing_event: str | None = None
 
 
-# Dispatch SOP Definition
-DISPATCH_SOP = [
+# CRM Follow-up SOP Definition
+CRM_FOLLOWUP_SOP = [
     SOPStep(
         id="ingest",
-        label="Ingest Load Request",
+        label="Ingest Lead",
         step_type=StepType.AUTO,
-        next_step="create-load",
-        log_event="Email received: Urgent shipment request Chicago → Dallas (12 pallets, refrigerated)",
+        next_step="enrich",
+        log_event="Inbound lead received: TechFlow Logistics, Chicago IL (form submission)",
     ),
     SOPStep(
-        id="create-load",
-        label="Create Load in TMS",
+        id="enrich",
+        label="Enrich + Score",
         step_type=StepType.AUTO,
-        next_step="add-equipment",
-        log_event="Load created: SHP-20260903-042, Chicago IL (60601) → Dallas TX (75201), 12 pallets",
+        next_step="score-gate",
+        log_event="Enrichment complete: Company size 120 employees, Annual revenue ~$15M, Industry: Supply Chain",
     ),
     SOPStep(
-        id="add-equipment",
-        label="Assign Equipment + Driver",
-        step_type=StepType.AUTO,
-        next_step="compliance-check",
-        log_event="Equipment assigned: Truck #T-789 (Refrigerated trailer), Driver: Mike Torres (CDL-A)",
-    ),
-    SOPStep(
-        id="compliance-check",
-        label="Compliance Check Gate",
+        id="score-gate",
+        label="Score Threshold?",
         step_type=StepType.GATE,
-        tool_name="check_compliance",
+        tool_name="assess_lead_score",
         tool_args_template={
-            "shipment_id": "SHP-20260903-042",
-            "driver_id": "drv_mike_torres",
-            "truck_id": "T-789",
-            "check_types": ["insurance_current", "cdl_valid", "dot_hours", "reefer_cert"],
+            "company_name": "TechFlow Logistics",
+            "lead_score": 78,
+            "fit_signals": ["mid-market", "existing_tech_stack", "budget_authority"],
+            "threshold": 70,
         },
-        on_approve="ask-drivers",
-        on_reject="compliance-escalate",
-        compliance_event="Compliance: Insurance ✓ | CDL valid ✓ | DOT hours OK ✓ | Reefer cert ✓",
+        on_approve="draft-email",
+        on_reject="low-score-nurture",
+        log_event="Lead score: 78/100 (Mid-market fit, buying authority confirmed)",
     ),
     SOPStep(
-        id="compliance-escalate",
-        label="Escalate Compliance Hold",
+        id="low-score-nurture",
+        label="Low Score → Nurture",
         step_type=StepType.AUTO,
         next_step=None,  # Terminal branch
-        log_event="Compliance FAIL: Load held, escalated to safety manager for manual review",
+        log_event="Below threshold: Added to nurture campaign, no immediate follow-up",
     ),
     SOPStep(
-        id="ask-drivers",
-        label="Request Driver Confirmation",
+        id="draft-email",
+        label="Draft Follow-up Email",
         step_type=StepType.AUTO,
-        next_step="driver-confirm",
-        log_event="Confirmation request sent to Mike Torres via mobile app (pickup: 2026-09-04 06:00 CST)",
+        next_step="email-approve",
+        log_event="Email drafted: Personalized follow-up for TechFlow Logistics (Chicago warehouse ops angle)",
     ),
     SOPStep(
-        id="driver-confirm",
-        label="Driver Confirm Gate",
+        id="email-approve",
+        label="Approve Email Send?",
         step_type=StepType.GATE,
-        tool_name="confirm_driver_acceptance",
+        tool_name="approve_email_draft",
         tool_args_template={
-            "driver_id": "drv_mike_torres",
-            "shipment_id": "SHP-20260903-042",
-            "pickup_time": "2026-09-04 06:00 CST",
-            "route": "Chicago IL → Dallas TX via I-55 S",
+            "to_email": "sam.johnson@techflow-logistics.com",
+            "subject": "RE: Your inquiry about route optimization",
+            "preview": "Hi Sam, Thanks for reaching out about optimizing your Chicago-Dallas lanes...",
+            "company": "TechFlow Logistics",
         },
-        on_approve="traffic-weather",
-        on_reject="re-ask-broker",
-        log_event="Driver response pending: Mike Torres notified, awaiting confirmation...",
+        on_approve="needs-manager-review",
+        on_reject="email-hold",
+        log_event="Email draft ready for approval (sales rep: Jane Park)",
     ),
     SOPStep(
-        id="re-ask-broker",
-        label="Find Alt Driver / Broker",
+        id="email-hold",
+        label="Hold / Edit",
         step_type=StepType.AUTO,
         next_step=None,  # Terminal branch
-        log_event="Driver declined: Searching backup drivers in Chicago area or brokering to partner carrier",
+        log_event="Email send rejected: Flagged for manual edit or hold",
     ),
     SOPStep(
-        id="traffic-weather",
-        label="Check Traffic + Weather",
-        step_type=StepType.AUTO,
-        next_step="weather-check",
-        log_event="Conditions: I-55 S clear, moderate traffic, weather advisory for heavy rain in southern IL",
-    ),
-    SOPStep(
-        id="weather-check",
-        label="Weather Risk Gate",
+        id="needs-manager-review",
+        label="Manager Review?",
         step_type=StepType.GATE,
-        tool_name="assess_weather_risk",
+        tool_name="check_manager_review_needed",
         tool_args_template={
-            "route": "I-55 S: Chicago IL → Springfield IL → St Louis MO → Dallas TX",
-            "shipment_id": "SHP-20260903-042",
-            "weather_conditions": "Heavy rain forecast southern IL, wind gusts 30-40mph",
+            "deal_size_estimate": 45000,
+            "rep_experience_days": 90,
+            "company_tier": "mid-market",
+            "threshold": 50000,
         },
-        on_approve="reroute-approval",  # Severe weather → reroute
-        on_reject="delivery-windows",   # Acceptable conditions → proceed
-        log_event="Weather assessment: Heavy rain southern IL (manageable), winds 30-40mph (within limits)",
+        on_approve="manager-escalate",
+        on_reject="send-email",
+        log_event="Deal size check: $45K (below manager review threshold)",
     ),
     SOPStep(
-        id="reroute-approval",
-        label="Reroute / Delay Load",
+        id="manager-escalate",
+        label="Escalate to Manager",
         step_type=StepType.AUTO,
-        next_step="delivery-windows",
-        log_event="Reroute approved: Alternate via I-57 S to avoid storm system, ETA +45min adjustment",
+        next_step="send-email",
+        log_event="Escalated: Manager review requested for high-value deal (Alex Rivera notified)",
     ),
     SOPStep(
-        id="delivery-windows",
-        label="Confirm Delivery Window",
+        id="send-email",
+        label="Send Email",
         step_type=StepType.AUTO,
-        next_step="coordinator",
-        log_event="Delivery window confirmed: 2026-09-05 10:00-14:00 CST at Dallas distribution center",
+        next_step="crm-update",
+        log_event="Email sent to sam.johnson@techflow-logistics.com at 2026-09-03 11:42 EST",
     ),
     SOPStep(
-        id="coordinator",
-        label="Assign Load Coordinator",
+        id="crm-update",
+        label="CRM Writeback",
         step_type=StepType.AUTO,
-        next_step="delivery",
-        log_event="Load coordinator assigned: Sarah Kim (Midwest region ops) monitoring shipment in transit",
+        next_step="audit",
+        log_event="CRM updated: TechFlow Logistics moved to 'Contacted' stage, Owner: Jane Park",
     ),
     SOPStep(
-        id="delivery",
-        label="Delivery In Progress",
-        step_type=StepType.AUTO,
-        next_step="pod-billing",
-        log_event="Shipment en route: Truck T-789 departed Chicago 06:15 CST, ETA Dallas 2026-09-05 12:30 CST",
-    ),
-    SOPStep(
-        id="pod-billing",
-        label="POD Received → Billing",
+        id="audit",
+        label="Audit + Log",
         step_type=StepType.AUTO,
         next_step=None,  # Terminal success
-        log_event="POD received: Delivered Dallas 2026-09-05 12:45 CST, signature on file",
-        billing_event="Invoice generated: INV-2026-0903-042, Amount: $3,280.00 (line haul + fuel surcharge + reefer)",
+        log_event="Follow-up sequence complete: Email sent, CRM synced, compliance logged",
+        compliance_event="Audit trail: Lead TechFlow Logistics, Score 78, Email approved by Jane Park, Sent at 11:42 EST",
     ),
 ]
 
@@ -190,7 +169,7 @@ class SOPRunner:
     
     def start(self) -> SOPStep:
         """Start the SOP from the first step."""
-        first_step = DISPATCH_SOP[0]
+        first_step = CRM_FOLLOWUP_SOP[0]
         self.current_step_id = first_step.id
         return first_step
     
@@ -225,13 +204,6 @@ class SOPRunner:
                     "type": "compliance",
                     "step_id": current_id,
                     "message": step.compliance_event,
-                })
-            
-            if step.billing_event:
-                events.append({
-                    "type": "billing",
-                    "step_id": current_id,
-                    "message": step.billing_event,
                 })
             
             # Check if this is a gate (needs approval)
