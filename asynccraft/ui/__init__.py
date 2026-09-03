@@ -40,7 +40,7 @@ from asynccraft.skins.invoice_ap.sop_runner import (
 
 router = APIRouter()
 
-env = Environment(loader=FileSystemLoader("asyncraft/ui/templates"), cache_size=0)
+env = Environment(loader=FileSystemLoader("asynccraft/ui/templates"), cache_size=0)
 env.filters["tojson"] = lambda x: json.dumps(x, indent=2)
 
 templates = Jinja2Templates(env=env)

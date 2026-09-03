@@ -73,7 +73,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-app.mount("/static", StaticFiles(directory="asyncraft/ui/static"), name="static")
+app.mount("/static", StaticFiles(directory="asynccraft/ui/static"), name="static")
 app.include_router(api_router, prefix="/api")
 app.include_router(ui_router)
 
