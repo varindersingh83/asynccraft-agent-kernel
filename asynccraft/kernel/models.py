@@ -48,6 +48,9 @@ class AgentRun(Base):
     approvals: Mapped[list["Approval"]] = relationship(
         back_populates="run", cascade="all, delete-orphan"
     )
+    sop_state: Mapped[Optional["SOPRunState"]] = relationship(
+        back_populates="run", uselist=False, cascade="all, delete-orphan"
+    )
 
 
 class AgentMessage(Base):
@@ -101,3 +104,27 @@ class ToolExecution(Base):
     )
 
     approval: Mapped["Approval"] = relationship(back_populates="execution")
+
+
+class SOPRunState(Base):
+    """Tracks SOP workflow state for demo runs."""
+    __tablename__ = "sop_run_states"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    run_id: Mapped[int] = mapped_column(
+        ForeignKey("agent_runs.id", ondelete="CASCADE"), unique=True
+    )
+    current_step_id: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    completed_steps: Mapped[list[str]] = mapped_column(JSON, default=list)
+    events: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
+    is_complete: Mapped[bool] = mapped_column(default=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    run: Mapped["AgentRun"] = relationship(
+        back_populates="sop_state", foreign_keys=[run_id]
+    )
