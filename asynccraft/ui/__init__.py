@@ -17,6 +17,8 @@ from asynccraft.skins.ops_dispatch.agent import get_sample_exceptions
 from asynccraft.skins.deal_flow.agent import get_sample_pitches
 from asynccraft.skins.crm_followup.agent import get_sample_leads
 from asynccraft.skins.invoice_ap.agent import get_sample_invoices
+from asynccraft.skins.inbox_triage.agent import get_sample_tickets
+from asynccraft.skins.voice_dispatch.agent import get_sample_calls
 from asynccraft.skins.ops_dispatch.sop_runner import (
     SOPRunner as DispatchSOPRunner,
     DISPATCH_SOP,
@@ -36,6 +38,16 @@ from asynccraft.skins.invoice_ap.sop_runner import (
     SOPRunner as InvoiceAPSOPRunner,
     INVOICE_AP_SOP,
     GateDecision as InvoiceAPGateDecision,
+)
+from asynccraft.skins.inbox_triage.sop_runner import (
+    SOPRunner as InboxTriageSOPRunner,
+    INBOX_TRIAGE_SOP,
+    GateDecision as InboxTriageGateDecision,
+)
+from asynccraft.skins.voice_dispatch.sop_runner import (
+    SOPRunner as VoiceDispatchSOPRunner,
+    VOICE_DISPATCH_SOP,
+    GateDecision as VoiceDispatchGateDecision,
 )
 
 router = APIRouter()
@@ -113,6 +125,46 @@ SKIN_REGISTRY = {
             "Invoice posted to AP → GL writeback → audit + compliance log complete",
         ],
     },
+    "inbox_triage": {
+        "id": "inbox_triage",
+        "name": "Inbox Triage",
+        "tagline": "Lakeshore Logistics Billing Desk",
+        "pitch": "Lakeshore Logistics (Chicago) ops inbox automation. Prairie Foods (Des Moines) emails detention claim on Load L-55212 Chicago→Dallas. Agent classifies billing-exception (not WISMO — those auto-reply), drafts $380 concession reply + TMS exception. Jane Ortiz (Billing) is the liability HITL gate before any customer concession. Built for 3PL billing desks handling 50+ detention/accessorial disputes per week.",
+        "icon": "📥",
+        "get_samples": get_sample_tickets,
+        "sop_runner_class": InboxTriageSOPRunner,
+        "sop_definition": INBOX_TRIAGE_SOP,
+        "gate_decision_class": InboxTriageGateDecision,
+        "deep_link": "/demo/inbox",
+        "click_path": [
+            "Lakeshore Logistics inbox: Prairie Foods (Des Moines) emails detention on Load L-55212 Chicago→Dallas",
+            "Agent classifies: BILLING-EXCEPTION (not WISMO — those auto-reply for contrast)",
+            "Exception gate: HIGH severity $380 detention → draft reply, ROUTINE/WISMO → auto-reply",
+            "Draft: $380 concession + TMS exception EXC-55212 prepared",
+            "Jane Ortiz (Billing) HITL gate: Approve $380 concession before customer reply",
+            "TMS exception posted → Prairie Foods notified → audit trail with compliance log",
+        ],
+    },
+    "voice_dispatch": {
+        "id": "voice_dispatch",
+        "name": "Voice Dispatch",
+        "tagline": "Cold Chain Carrier Booking (Phone Channel)",
+        "pitch": "Cold Chain Logistics (Atlanta) broker desk inbound carrier call automation. Carrier covers ATL→DAL reefer Load #18402 at $2,600. Agent transcribes, extracts rate/MC, runs FMCSA/chameleon-MC diamond check, verifies $2,800 rate ceiling. John Hale HITL gate for rate-con send. Then outbound check-call + shipper-notify gate before TMS booking. Phone channel only — built for freight brokerages booking 100+ carrier calls per week.",
+        "icon": "📞",
+        "get_samples": get_sample_calls,
+        "sop_runner_class": VoiceDispatchSOPRunner,
+        "sop_definition": VOICE_DISPATCH_SOP,
+        "gate_decision_class": VoiceDispatchGateDecision,
+        "deep_link": "/demo/voice",
+        "click_path": [
+            "Cold Chain Logistics (Atlanta): Inbound carrier call for ATL→DAL reefer #18402",
+            "Transcribe: Pinnacle Transport, MC-123456, $2,600 rate quoted",
+            "FMCSA / chameleon-MC diamond gate: CLEARED (no fraud flags) → continue, FAIL → reject",
+            "Rate ceiling check: $2,600 vs $2,800 ceiling → PASS (within budget)",
+            "John Hale HITL gate: Approve $2,600 rate-con send to Pinnacle Transport",
+            "Outbound check-call + shipper-notify gate → TMS booking BK-18402 → audit trail",
+        ],
+    },
 }
 
 
@@ -173,6 +225,18 @@ async def demo_crm(request: Request, session: AsyncSession = Depends(get_db)):
 async def demo_invoice(request: Request, session: AsyncSession = Depends(get_db)):
     """Deep link to Invoice/AP demo."""
     return await index(request, session, skin="invoice_ap")
+
+
+@router.get("/demo/inbox", response_class=HTMLResponse)
+async def demo_inbox(request: Request, session: AsyncSession = Depends(get_db)):
+    """Deep link to Inbox Triage demo."""
+    return await index(request, session, skin="inbox_triage")
+
+
+@router.get("/demo/voice", response_class=HTMLResponse)
+async def demo_voice(request: Request, session: AsyncSession = Depends(get_db)):
+    """Deep link to Voice Dispatch demo."""
+    return await index(request, session, skin="voice_dispatch")
 
 
 @router.post("/demo-run", response_class=HTMLResponse)

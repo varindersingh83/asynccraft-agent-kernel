@@ -35,6 +35,8 @@
             <button class="workflow-tab {% if active_skin == 'ops_dispatch' %}active{% endif %}" onclick="showWorkflow('ops_dispatch')">🚛 Dispatch SOP</button>
             <button class="workflow-tab {% if active_skin == 'crm_followup' %}active{% endif %}" onclick="showWorkflow('crm_followup')">📧 CRM Follow-up</button>
             <button class="workflow-tab {% if active_skin == 'invoice_ap' %}active{% endif %}" onclick="showWorkflow('invoice_ap')">💰 Invoice / AP</button>
+            <button class="workflow-tab {% if active_skin == 'inbox_triage' %}active{% endif %}" onclick="showWorkflow('inbox_triage')">📥 Inbox Triage</button>
+            <button class="workflow-tab {% if active_skin == 'voice_dispatch' %}active{% endif %}" onclick="showWorkflow('voice_dispatch')">📞 Voice Dispatch</button>
         </div>
         
         <!-- Dispatch SOP Flowchart -->
@@ -429,6 +431,260 @@
                         <div class="step-icon">✅</div>
                         <div class="step-label">Audit + Compliance Log</div>
                         <div class="step-desc">Trail complete</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Inbox Triage Flowchart -->
+        <div id="workflow-inbox_triage" class="workflow-visualization" style="{% if active_skin != 'inbox_triage' %}display: none;{% endif %}">
+            <div class="demo-actions">
+                <form method="post" action="/demo-run" hx-post="/demo-run" hx-target="#approval-queue-container" hx-swap="innerHTML">
+                    <input type="hidden" name="skin" value="inbox_triage">
+                    <button type="submit" class="btn-demo">Run Inbox Triage Demo</button>
+                </form>
+            </div>
+            <div class="flowchart">
+                <div class="flowchart-row">
+                    <div class="workflow-step" data-step="ingest">
+                        <div class="step-icon">📧</div>
+                        <div class="step-label">Ingest Ticket</div>
+                        <div class="step-desc">Lakeshore (Chicago)</div>
+                    </div>
+                </div>
+                <div class="flowchart-row"><div class="flow-arrow-down">↓</div></div>
+                <div class="flowchart-row">
+                    <div class="workflow-step" data-step="classify">
+                        <div class="step-icon">🏷️</div>
+                        <div class="step-label">Classify Type</div>
+                        <div class="step-desc">BILLING-EXCEPTION</div>
+                    </div>
+                </div>
+                <div class="flowchart-row"><div class="flow-arrow-down">↓</div></div>
+                <div class="flowchart-row">
+                    <div class="workflow-decision" data-step="severity-gate">
+                        <div class="decision-icon">⚡</div>
+                        <div class="step-label">Exception Gate</div>
+                        <div class="step-desc">HIGH: $380 detention</div>
+                    </div>
+                </div>
+                <div class="flowchart-row branch-row">
+                    <div class="branch-container">
+                        <div class="branch-left">
+                            <div class="flow-arrow-left">↙ Reject</div>
+                            <div class="workflow-step branch-step" data-step="junk-archive">
+                                <div class="step-icon">🗄️</div>
+                                <div class="step-label">WISMO Auto-Reply</div>
+                                <div class="step-desc">No billing liability</div>
+                            </div>
+                        </div>
+                        <div class="branch-right">
+                            <div class="flow-arrow-right">Approve ↘</div>
+                            <div class="workflow-step branch-step" data-step="draft-reply">
+                                <div class="step-icon">✍️</div>
+                                <div class="step-label">Draft Reply</div>
+                                <div class="step-desc">$380 concession + TMS</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flowchart-row"><div class="flow-arrow-down">↓</div></div>
+                <div class="flowchart-row">
+                    <div class="workflow-decision" data-step="reply-approve">
+                        <div class="decision-icon">✉️</div>
+                        <div class="step-label">Jane Ortiz (Billing) HITL</div>
+                        <div class="step-desc">Approve $380 concession?</div>
+                    </div>
+                </div>
+                <div class="flowchart-row branch-row">
+                    <div class="branch-container">
+                        <div class="branch-left">
+                            <div class="flow-arrow-left">↙ Reject</div>
+                            <div class="workflow-step branch-step" data-step="reply-hold">
+                                <div class="step-icon">✋</div>
+                                <div class="step-label">Hold / Edit</div>
+                                <div class="step-desc">Manual review</div>
+                            </div>
+                        </div>
+                        <div class="branch-right">
+                            <div class="flow-arrow-right">Approve ↘</div>
+                            <div class="workflow-step branch-step" data-step="sla-escalate">
+                                <div class="step-icon">📈</div>
+                                <div class="step-label">Manager Escalate?</div>
+                                <div class="step-desc">$380 < $500 threshold</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flowchart-row"><div class="flow-arrow-down">↓</div></div>
+                <div class="flowchart-row">
+                    <div class="workflow-decision" data-step="sla-escalate">
+                        <div class="decision-icon">🚨</div>
+                        <div class="step-label">Escalation Gate</div>
+                        <div class="step-desc">$380 < $500 threshold</div>
+                    </div>
+                </div>
+                <div class="flowchart-row branch-row">
+                    <div class="branch-container">
+                        <div class="branch-left">
+                            <div class="flow-arrow-left">↙ Reject</div>
+                            <div class="workflow-step branch-step" data-step="post-tms">
+                                <div class="step-icon">💾</div>
+                                <div class="step-label">Post TMS</div>
+                                <div class="step-desc">EXC-55212</div>
+                            </div>
+                        </div>
+                        <div class="branch-right">
+                            <div class="flow-arrow-right">Approve ↘</div>
+                            <div class="workflow-step branch-step" data-step="escalate-manager">
+                                <div class="step-icon">👔</div>
+                                <div class="step-label">Escalate Manager</div>
+                                <div class="step-desc">High-$ review</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flowchart-row"><div class="flow-arrow-down">↓</div></div>
+                <div class="flowchart-row">
+                    <div class="workflow-step final-step" data-step="audit">
+                        <div class="step-icon">✅</div>
+                        <div class="step-label">Audit + Compliance Log</div>
+                        <div class="step-desc">Prairie Foods notified</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Voice Dispatch Flowchart -->
+        <div id="workflow-voice_dispatch" class="workflow-visualization" style="{% if active_skin != 'voice_dispatch' %}display: none;{% endif %}">
+            <div class="demo-actions">
+                <form method="post" action="/demo-run" hx-post="/demo-run" hx-target="#approval-queue-container" hx-swap="innerHTML">
+                    <input type="hidden" name="skin" value="voice_dispatch">
+                    <button type="submit" class="btn-demo">Run Voice Dispatch Demo</button>
+                </form>
+            </div>
+            <div class="flowchart">
+                <div class="flowchart-row">
+                    <div class="workflow-step" data-step="call-ingest">
+                        <div class="step-icon">📱</div>
+                        <div class="step-label">Ingest Call</div>
+                        <div class="step-desc">Cold Chain (Atlanta)</div>
+                    </div>
+                </div>
+                <div class="flowchart-row"><div class="flow-arrow-down">↓</div></div>
+                <div class="flowchart-row">
+                    <div class="workflow-step" data-step="transcribe">
+                        <div class="step-icon">🎙️</div>
+                        <div class="step-label">Transcribe Voice</div>
+                        <div class="step-desc">Pinnacle Transport</div>
+                    </div>
+                </div>
+                <div class="flowchart-row"><div class="flow-arrow-down">↓</div></div>
+                <div class="flowchart-row">
+                    <div class="workflow-step" data-step="extract-fields">
+                        <div class="step-icon">📍</div>
+                        <div class="step-label">Extract Fields</div>
+                        <div class="step-desc">MC-123456, $2,600</div>
+                    </div>
+                </div>
+                <div class="flowchart-row"><div class="flow-arrow-down">↓</div></div>
+                <div class="flowchart-row">
+                    <div class="workflow-decision" data-step="severity-gate">
+                        <div class="decision-icon">🚨</div>
+                        <div class="step-label">FMCSA / Chameleon-MC Gate</div>
+                        <div class="step-desc">MC-123456 CLEARED</div>
+                    </div>
+                </div>
+                <div class="flowchart-row branch-row">
+                    <div class="branch-container">
+                        <div class="branch-left">
+                            <div class="flow-arrow-left">↙ Reject</div>
+                            <div class="workflow-step branch-step" data-step="queue-morning">
+                                <div class="step-icon">🛑</div>
+                                <div class="step-label">FMCSA Hold</div>
+                                <div class="step-desc">Carrier rejected</div>
+                            </div>
+                        </div>
+                        <div class="branch-right">
+                            <div class="flow-arrow-right">Approve ↘</div>
+                            <div class="workflow-step branch-step" data-step="propose-tech">
+                                <div class="step-icon">💰</div>
+                                <div class="step-label">Rate Check</div>
+                                <div class="step-desc">$2,600 < $2,800</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flowchart-row"><div class="flow-arrow-down">↓</div></div>
+                <div class="flowchart-row">
+                    <div class="workflow-decision" data-step="assign-approve">
+                        <div class="decision-icon">✅</div>
+                        <div class="step-label">John Hale Rate-Con HITL</div>
+                        <div class="step-desc">Approve $2,600?</div>
+                    </div>
+                </div>
+                <div class="flowchart-row branch-row">
+                    <div class="branch-container">
+                        <div class="branch-left">
+                            <div class="flow-arrow-left">↙ Reject</div>
+                            <div class="workflow-step branch-step" data-step="assignment-hold">
+                                <div class="step-icon">⏸️</div>
+                                <div class="step-label">Hold / Negotiate</div>
+                                <div class="step-desc">Renegotiate rate</div>
+                            </div>
+                        </div>
+                        <div class="branch-right">
+                            <div class="flow-arrow-right">Approve ↘</div>
+                            <div class="workflow-step branch-step" data-step="notify-shipper">
+                                <div class="step-icon">📧</div>
+                                <div class="step-label">Check-Call + Notify</div>
+                                <div class="step-desc">Atlanta Cold Storage</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flowchart-row"><div class="flow-arrow-down">↓</div></div>
+                <div class="flowchart-row">
+                    <div class="workflow-decision" data-step="notify-shipper">
+                        <div class="decision-icon">📨</div>
+                        <div class="step-label">Shipper Notification Gate</div>
+                        <div class="step-desc">Send pickup confirm?</div>
+                    </div>
+                </div>
+                <div class="flowchart-row branch-row">
+                    <div class="branch-container">
+                        <div class="branch-left">
+                            <div class="flow-arrow-left">↙ Reject</div>
+                            <div class="workflow-step branch-step" data-step="create-wo">
+                                <div class="step-icon">📋</div>
+                                <div class="step-label">Book Load</div>
+                                <div class="step-desc">Skip shipper notify</div>
+                            </div>
+                        </div>
+                        <div class="branch-right">
+                            <div class="flow-arrow-right">Approve ↘</div>
+                            <div class="workflow-step branch-step" data-step="send-notification">
+                                <div class="step-icon">✉️</div>
+                                <div class="step-label">Send Pickup Confirm</div>
+                                <div class="step-desc">Shipper notified</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flowchart-row"><div class="flow-arrow-down">↓</div></div>
+                <div class="flowchart-row">
+                    <div class="workflow-step" data-step="create-wo">
+                        <div class="step-icon">📝</div>
+                        <div class="step-label">Create Load Booking</div>
+                        <div class="step-desc">BK-18402</div>
+                    </div>
+                </div>
+                <div class="flowchart-row"><div class="flow-arrow-down">↓</div></div>
+                <div class="flowchart-row">
+                    <div class="workflow-step final-step" data-step="audit">
+                        <div class="step-icon">✅</div>
+                        <div class="step-label">Audit + Phone Channel Log</div>
+                        <div class="step-desc">Carrier booked</div>
                     </div>
                 </div>
             </div>
