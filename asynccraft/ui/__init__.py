@@ -17,6 +17,8 @@ from asynccraft.skins.ops_dispatch.agent import get_sample_exceptions
 from asynccraft.skins.deal_flow.agent import get_sample_pitches
 from asynccraft.skins.crm_followup.agent import get_sample_leads
 from asynccraft.skins.invoice_ap.agent import get_sample_invoices
+from asynccraft.skins.inbox_triage.agent import get_sample_tickets
+from asynccraft.skins.voice_dispatch.agent import get_sample_calls
 from asynccraft.skins.ops_dispatch.sop_runner import (
     SOPRunner as DispatchSOPRunner,
     DISPATCH_SOP,
@@ -36,6 +38,16 @@ from asynccraft.skins.invoice_ap.sop_runner import (
     SOPRunner as InvoiceAPSOPRunner,
     INVOICE_AP_SOP,
     GateDecision as InvoiceAPGateDecision,
+)
+from asynccraft.skins.inbox_triage.sop_runner import (
+    SOPRunner as InboxTriageSOPRunner,
+    INBOX_TRIAGE_SOP,
+    GateDecision as InboxTriageGateDecision,
+)
+from asynccraft.skins.voice_dispatch.sop_runner import (
+    SOPRunner as VoiceDispatchSOPRunner,
+    VOICE_DISPATCH_SOP,
+    GateDecision as VoiceDispatchGateDecision,
 )
 
 router = APIRouter()
@@ -113,6 +125,46 @@ SKIN_REGISTRY = {
             "Invoice posted to AP → GL writeback → audit + compliance log complete",
         ],
     },
+    "inbox_triage": {
+        "id": "inbox_triage",
+        "name": "Inbox Triage",
+        "tagline": "Ops Inbox Exception Queue",
+        "pitch": "Automate 3PL ops inbox handling for customer emails and portal tickets. Agent classifies (delay/accessorial/claim/junk), drafts replies with TMS exception proposals, and routes for HITL approval before outbound response. Escalation gates catch high-$ or SLA-risk issues for manager review. Built for freight brokers, 3PLs, and logistics ops teams processing 100+ daily exceptions across Chicago, Detroit, Dallas, and Toronto lanes.",
+        "icon": "📥",
+        "get_samples": get_sample_tickets,
+        "sop_runner_class": InboxTriageSOPRunner,
+        "sop_definition": INBOX_TRIAGE_SOP,
+        "gate_decision_class": InboxTriageGateDecision,
+        "deep_link": "/demo/inbox",
+        "click_path": [
+            "Inbound email/ticket ingested from broker or customer (delay, accessorial, or claim)",
+            "Agent classifies ticket type with 92% confidence, extracts $ amount and SLA risk",
+            "Severity gate: HIGH/CRITICAL → draft reply, ROUTINE → archive for batch processing",
+            "Human approves reply draft before send (gate shows preview + proposed TMS exception)",
+            "SLA escalation gate: $450 detention (below $1K threshold) but SLA risk flagged → manager notified",
+            "TMS exception posted → customer reply sent → audit trail with compliance log complete",
+        ],
+    },
+    "voice_dispatch": {
+        "id": "voice_dispatch",
+        "name": "Voice Dispatch",
+        "tagline": "Voice-to-Work-Order Automation",
+        "pitch": "Automate after-hours driver emergency calls into work orders. Agent transcribes voice, extracts location/asset/issue, proposes nearest technician with ETA, and routes for HITL assignment approval before dispatch. Optional customer notification gate (SMS/email to shipper). Designed for trucking fleets, freight carriers, and field service ops managing 24/7 roadside emergencies across Midwest and Great Lakes routes (Chicago, Detroit, Springfield).",
+        "icon": "📞",
+        "get_samples": get_sample_calls,
+        "sop_runner_class": VoiceDispatchSOPRunner,
+        "sop_definition": VOICE_DISPATCH_SOP,
+        "gate_decision_class": VoiceDispatchGateDecision,
+        "deep_link": "/demo/voice",
+        "click_path": [
+            "After-hours call received: Driver Mike reports reefer alarm on I-55 south of Springfield IL",
+            "Agent transcribes 145-second call, extracts location/asset (TRUCK-2847)/issue (reefer alarm)",
+            "Emergency gate: EMERGENCY (reefer alarm, perishable cargo) → propose tech, ROUTINE → queue for morning",
+            "Tech proposed: Carlos Martinez (TECH-104) from Springfield, ETA 45 min → human approves assignment",
+            "Shipper notification gate: Send ETA to Fresh Foods Distributors → approved (or skip if hold)",
+            "Work order WO-28470 created → tech dispatched → audit/billing touch for after-hours fee complete",
+        ],
+    },
 }
 
 
@@ -173,6 +225,18 @@ async def demo_crm(request: Request, session: AsyncSession = Depends(get_db)):
 async def demo_invoice(request: Request, session: AsyncSession = Depends(get_db)):
     """Deep link to Invoice/AP demo."""
     return await index(request, session, skin="invoice_ap")
+
+
+@router.get("/demo/inbox", response_class=HTMLResponse)
+async def demo_inbox(request: Request, session: AsyncSession = Depends(get_db)):
+    """Deep link to Inbox Triage demo."""
+    return await index(request, session, skin="inbox_triage")
+
+
+@router.get("/demo/voice", response_class=HTMLResponse)
+async def demo_voice(request: Request, session: AsyncSession = Depends(get_db)):
+    """Deep link to Voice Dispatch demo."""
+    return await index(request, session, skin="voice_dispatch")
 
 
 @router.post("/demo-run", response_class=HTMLResponse)

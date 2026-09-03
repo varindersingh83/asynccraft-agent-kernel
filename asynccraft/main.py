@@ -32,6 +32,22 @@ from asynccraft.skins.invoice_ap.tools import (
     CheckVendorComplianceTool,
     PostToAPTool,
 )
+from asynccraft.skins.inbox_triage.tools import (
+    ClassifyTicketTool,
+    AssessSeverityTool,
+    ApproveReplyTool,
+    CheckEscalateNeededTool,
+    PostTMSExceptionTool,
+)
+from asynccraft.skins.voice_dispatch.tools import (
+    TranscribeCallTool,
+    ExtractFieldsTool,
+    AssessEmergencySeverityTool,
+    ProposeTechAssignmentTool,
+    ApproveAssignmentTool,
+    ApproveShipperNotificationTool,
+    CreateWorkOrderTool,
+)
 
 
 @asynccontextmanager
@@ -62,6 +78,22 @@ async def lifespan(app: FastAPI):
     register_tool(ApproveAPCorrectionTool())
     register_tool(CheckVendorComplianceTool())
     register_tool(PostToAPTool())
+    
+    # Register inbox_triage tools
+    register_tool(ClassifyTicketTool())
+    register_tool(AssessSeverityTool())
+    register_tool(ApproveReplyTool())
+    register_tool(CheckEscalateNeededTool())
+    register_tool(PostTMSExceptionTool())
+    
+    # Register voice_dispatch tools
+    register_tool(TranscribeCallTool())
+    register_tool(ExtractFieldsTool())
+    register_tool(AssessEmergencySeverityTool())
+    register_tool(ProposeTechAssignmentTool())
+    register_tool(ApproveAssignmentTool())
+    register_tool(ApproveShipperNotificationTool())
+    register_tool(CreateWorkOrderTool())
     
     yield
 
