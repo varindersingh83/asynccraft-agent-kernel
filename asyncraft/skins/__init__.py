@@ -1,1 +1,0 @@
-"""Skins: vertical-specific implementations."""
